@@ -135,7 +135,9 @@ Diagnosis log line.
 ## Phase 4 — Vision extraction, intent classifier, triage
 
 ```text
-Implement code/ghost/llm.py: OpenAI-compatible client from config; retry with exponential backoff
+Implement code/ghost/llm.py: OpenAI-compatible client from config. Read the gateway facts in
+progress.md first: never send temperature to Claude; send images only through client.responses.create
+(input_text + input_image data URL); text-only calls may use chat.completions. Retry with exponential backoff
 on 429/5xx (max 5); every call appends provider, model, prompt tokens, completion tokens, latency,
 estimated cost to code/cache/usage_log.jsonl; budget guard stops when LLM_BUDGET_USD is reached;
 structured output enforced with pydantic: on validation failure re-ask with the error and only the

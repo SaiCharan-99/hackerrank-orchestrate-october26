@@ -35,6 +35,20 @@ Design reference: `APPROACH.md`. Output contract: `AGENTS.md` §6. Phase prompts
   (string constants) and caches are `.md`-documented but stored as `.json` only because they are data.
 - LLM gateway is OpenAI-compatible: `LLM_BASE_URL` + `LLM_API_KEY` from `.env`.
 - Python 3.13 on the build machine; `openai`, `pandas`, `pydantic`, `python-dotenv`, `pillow` already installed.
+- Gateway facts verified 2026-10-25 (72 models, Bifrost over Bedrock):
+  - Aliases `claude-sonnet` → `bedrock/global.anthropic.claude-sonnet-5-5`, `claude-haiku` → `claude-haiku-5-5`,
+    `claude-opus` → `claude-opus-5-5`. Claude 5.x **rejects `temperature`**; omit it (determinism comes from
+    caching and schema validation, not sampling params).
+  - **Chat Completions drops images** on every model (prompt tokens stay ~27). Vision must use the
+    **Responses API** (`client.responses.create` with `input_text` + `input_image` data URL) or the
+    Anthropic-native `POST {base without /v1}/v1/messages`. Verified working for Claude, Qwen3-VL, Grok 4.7,
+    Kimi K2.5, Gemma 3. MiniMax has no vision. `claude-fable-5-1` needs a data-retention header; not used.
+  - Model roles: vision A `claude-sonnet`; vision B `bedrock/qwen.qwen3-vl-235b-a22b` (different family,
+    read the sample console exactly); text/intent `claude-haiku`; triage `claude-sonnet`. Gemma 3 27B
+    misread `backup_9291` as `backup_3291` and `areed1433` as `arreed143` in the probe: that is exactly the
+    OCR risk the agreement pass exists for, and it becomes a documented adversarial example.
+  - `python-dotenv`: call `load_dotenv(REPO_ROOT / ".env")` with an explicit path; bare `load_dotenv()`
+    fails under heredoc/stdin execution on this machine.
 
 ## Decisions and parameters
 
