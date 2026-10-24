@@ -5,6 +5,7 @@ Usage:  python code/main.py --counts
         python code/main.py --identity-check
         python code/main.py --evidence <resource_id>
         python code/main.py --coverage
+        python code/main.py --discovery
 """
 from __future__ import annotations
 
@@ -172,6 +173,46 @@ def cmd_coverage() -> int:
     return 0 if not text_errors and not unexpected else 1
 
 
+def cmd_discovery() -> int:
+    """Phase 2b: candidate-set histogram over the evaluation set and the sample account check."""
+    import json
+
+    from ghost.discovery import discover, histogram
+    from ghost.evidence import build_evidence_index
+
+    data = load_all(DATASET_DIR)
+    results = discover(data, build_index(data), build_evidence_index(data))
+    eval_ids = list(data.requests["case_id"])
+    hist = histogram(results, eval_ids)
+    print(f"Candidate-set size histogram over {len(eval_ids)} evaluation cases")
+    for size in sorted(hist):
+        print(f"  {size:>2} candidates: {hist[size]:>4}")
+    amb = sum(results[c].ambiguous for c in eval_ids)
+    print(f"Ambiguous (tentative choice, Phase 4 triage): {amb}  resolved: {sum(1 for c in eval_ids if results[c].chosen_account and not results[c].ambiguous)}")
+    print(f"Mean non-account resources per subject: "
+          f"{sum(len(results[c].resources) for c in eval_ids) / len(eval_ids):.1f}")
+    out = dict(zip(data.sample_output["case_id"], data.sample_output["steps_json"]))
+    tally = {"exact": 0, "contained": 0, "miss": 0, "n/a": 0}
+    print("Sample accounts (expected vs discovered)")
+    for cid in data.sample_requests["case_id"]:
+        d = results[cid]
+        steps = json.loads(out.get(cid, "[]") or "[]")
+        exp = sorted({st["resource_id"] for st in steps if st["resource_id"].startswith("account_")})
+        if not exp:
+            verdict = "n/a"
+        elif d.chosen_account in exp:
+            verdict = "exact"
+        elif set(exp) & set(d.account_candidates):
+            verdict = "contained"
+        else:
+            verdict = "miss"
+        tally[verdict] += 1
+        print(f"  {cid:<8} expected={','.join(exp) or '-':<13} chosen={d.chosen_account or '-':<13} "
+              f"cands={len(d.account_candidates)} {verdict:<9} {d.reason}")
+    print(f"Samples: {tally}  (contained includes exact: {tally['exact'] + tally['contained']})")
+    return 0 if tally["miss"] == 0 else 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Ghost Data Still Exists deletion-audit agent")
     parser.add_argument("--counts", action="store_true", help="print dataset table counts")
@@ -179,6 +220,7 @@ def main() -> int:
     parser.add_argument("--identity-check", action="store_true", help="Phase 1 identity checks")
     parser.add_argument("--evidence", metavar="RESOURCE_ID", help="print all evidence rows for a resource")
     parser.add_argument("--coverage", action="store_true", help="Phase 2 parser coverage and sample citation check")
+    parser.add_argument("--discovery", action="store_true", help="Phase 2b account discovery check")
     args = parser.parse_args()
     if args.counts:
         return cmd_counts()
@@ -190,6 +232,8 @@ def main() -> int:
         return cmd_evidence(args.evidence)
     if args.coverage:
         return cmd_coverage()
+    if args.discovery:
+        return cmd_discovery()
     parser.print_help()
     return 0
 

@@ -157,3 +157,110 @@ branch=main
 repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-24T20:38:41Z] SESSION START
+
+tool=Claude Code
+model=claude-opus-5-5
+Repo Root: C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+Branch: main
+Worktree: main
+Parent Agent: none
+Language: py
+Time Remaining: not configured
+
+## [2026-10-24T20:43:07Z] Phase 2b: account discovery (discovery.py, --discovery)
+
+User Prompt (verbatim, secrets redacted):
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
+
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+Phase 2 built the parsers and EvidenceIndex but did not build account discovery. This phase builds it.
+ACCOUNT DISCOVERY (verified finding, highest-risk part of the problem). Every canonical answer names the
+subject's account_* id, but the account row in evidence usually carries NO identifier (404 / profile
+null / absent from table), and only ~200 of 518 subjects have an account tied to them by an identifier
+anywhere in text evidence. Implement code/ghost/discovery.py with these signals, combined in this order,
+and print per-case candidate counts:
+ 1. Evidence ownership: any evidence row (any file, any capture time, incl. after audit_at - linkage is
+    not state) whose identifiers (email, hash, phone digits, user_id as customer_reference /
+    subject_reference / lookup_key) resolve to exactly one subject attaches that resource_id to the
+    subject via Subject.add_resource. For logs join *_started lookup_key to *_completed resource_id by
+    trace_id. Numbering pattern user_0N <-> account_00N exists only for the first ten story users and is
+    confirmed by SQL rows (account_005 / user_05); do not generalize it.
+ 2. Activity window: deletion_worker DELETE_RECORD on account_* occurs once per account (539 activities,
+    539 distinct accounts) and lands between requested_at and reported_at, typically 0-75 minutes before
+    reported_at. reported_result maps COMPLETE->SUCCESS, PARTIALLY_COMPLETE->PARTIAL, NOT_STARTED->FAILED
+    (two story samples break this, so use it as a preference, not a filter). CLASSIFY_REQUEST
+    (10 rows) marks non-deletion intake accounts the same way.
+ 3. Elimination: remove accounts owned by another subject (signal 1) and accounts uniquely assigned to
+    another case; iterate to a fixed point across all 550 requests (518 + 32 samples).
+ 4. Residual ambiguity (expected ~150 cases with 2-6 candidates sharing one reported_at cluster): record
+    the candidate set on the Subject, prefer result-matched candidates, and leave a hook for Phase 4
+    triage. Never silently pick; log the choice and reason.
+Checks for discovery: --discovery prints the candidate-set size histogram over 518 and, for the 32
+samples, exact / contained / miss against the account ids in sample_output.csv. Target: all 32 contained,
+>= 28 exact, and the Diagnosis log records what each failing sample needed.
+Implementation notes: use EvidenceIndex.by_identifier and each row's lookup_keys for signal 1 and call
+Subject.add_resource with a source like "evidence:<file_id>" then IdentityIndex.reindex(). Also attach every
+non-account resource (search_, support_, analytics_, export_, data_flow_, backup_, audit_record_, tombstone_,
+marketing_, cache_, email_delivery_, legal_hold_) owned through an identifier, because Phase 3 needs the
+whole footprint per subject, not just the account. Keep discovery pure: it reads data + index and returns a
+Discovery result per case {subject, account_candidates, chosen_account, reason, resources}; nothing in it
+calls an LLM. Known fact to use: scoped SQL extracts (e.g. evidence_90 has snapshot_scope=account_service and
+empty tables) enumerate only the system named in snapshot_scope, so absence-by-omission applies only to that
+system there.
+Checks: python code/main.py --discovery ; paste the histogram and the 32-sample table. Also run --coverage
+again to confirm nothing regressed.
+
+Agent Response Summary:
+Built code/ghost/discovery.py (evidence ownership attaching every identifier-owned resource, evidence-confirmed story numbering pattern for users 1-10, activity window with 15 min report lag and 90 min near-report preference, subject-keyed fixed-point elimination, deterministic one-to-one tentative assignment with reasons and an ambiguous flag for Phase 4) and the --discovery CLI. Samples: 32/32 contained, 29 exact (case_23, case_28, case_29 are symmetric in activity and need Phase 4 evidence). Evaluation: 297 unique, 221 ambiguous with 2-6 candidates, 0 empty. --coverage unchanged (74 ok, 1 deferred PDF).
+
+Actions:
+* Created code/ghost/discovery.py; edited code/main.py (--discovery); edited progress.md
+* Ran python code/main.py --discovery, --coverage, --identity-check; viewed evidence_04 PNG while looking for account_004
+
+Diagnosis: case_02/04/06/07/08/10 missed or ambiguous -> story accounts carry no identifier in text evidence and their DELETE_RECORD lands up to 5 min after reported_at (account_004 has no activity) -> added evidence-confirmed story numbering signal and a 15 min REPORT_LAG.
+Diagnosis: case_28 and case_29 both chose account_7012 -> per-case choice ignored one owner per account -> one-to-one greedy assignment across all requests (28/29 still swapped; symmetric, left to Phase 4).
+Diagnosis: 232 ambiguous eval cases with up to 8 candidates -> multi-day windows include other clusters' hits -> prefer hits within 90 min of reported_at (221 ambiguous, max 6).
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=main
+repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
+
+## [2026-10-24T20:46:30Z] Commit Phase 2b changes
+
+User Prompt (verbatim, secrets redacted):
+Commit the working tree changes with a sensible message.
+
+Agent Response Summary:
+Committed discovery.py, the --discovery CLI in main.py, progress.md and log.txt on main. Not pushed.
+
+Actions:
+* git add + git commit
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=main
+repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

@@ -21,7 +21,7 @@ Design reference: `APPROACH.md`. Output contract: `AGENTS.md` §6. Phase prompts
 | 0 | Scaffold, loader, model probe | DONE | `python code/main.py --counts` prints table counts; `python code/tools/list_models.py` lists gateway models |
 | 1 | Identity graph | DONE | all 518 request emails resolve to a `user_id`; `--subject` prints sample subjects with account ids |
 | 2 | Text evidence parsers (SQL / JSON / logs / txt) | DONE | every sample finding and verification resource is found in the cited file at ≤ `audit_at` |
-| 2b | Account discovery (`discovery.py`, `--discovery`; prompts.md Phase 2 "ACCOUNT DISCOVERY") | TODO | all 32 sample accounts contained, >= 28 exact |
+| 2b | Account discovery (`discovery.py`, `--discovery`; prompts.md Phase 2 "ACCOUNT DISCOVERY") | DONE | all 32 sample accounts contained, >= 28 exact |
 | 3 | State engine + local grader | TODO | `--grade` reports 32/32 exact sample matches |
 | 4 | Vision extraction + intent classifier + triage | TODO | vision agreement pass clean; `NOT_APPLICABLE` set agrees with `CLASSIFY_REQUEST` activities |
 | 5 | Full run + validator | TODO | `output.csv` 518 rows, validator PASS, zero future-evidence citations |
@@ -77,6 +77,14 @@ Account discovery (block 2b) was not in the executed prompt and is still TODO.
 Files: created `code/ghost/evidence/{__init__,base,sql,json_exports,logs,text,index}.py`; changed `code/main.py`
 (`--evidence`, `--coverage`).
 
+## Phase 2b summary (DONE 2026-10-24)
+
+`code/ghost/discovery.py` ties each of the 550 requests to an account and footprint: evidence ownership (signal 1,
+attaches every resource whose row identifiers/lookup keys resolve to exactly one subject), the confirmed story
+numbering pattern, the DELETE_RECORD/CLASSIFY_REQUEST activity window, fixed-point elimination, then a tentative
+one-to-one assignment. Samples: 32/32 contained, 29 exact. Evaluation: 297 unique, 221 ambiguous (sizes 2-6), 0 empty.
+Files: created `code/ghost/discovery.py`; changed `code/main.py` (`--discovery`).
+
 ## Decisions and parameters
 
 - P0: CSVs read with `dtype=str, keep_default_na=False` so empty identifiers stay `""` (never NaN) and ids are never coerced.
@@ -85,6 +93,13 @@ Files: created `code/ghost/evidence/{__init__,base,sql,json_exports,logs,text,in
 - P0: role model defaults mirror `.env.example` (vision `claude-sonnet`, vision B `bedrock/qwen.qwen3-vl-235b-a22b`, text `claude-haiku`, triage `claude-sonnet`, budget $10).
 
 ## Open issues
+
+- P2b: 221/518 evaluation cases keep 2-6 account candidates (tentative choice); Phase 4 triage must resolve them.
+  Samples case_23 (account_410 vs 9155, identical FAILED timing), case_28/case_29 (5482/7012 swapped, same
+  reported_at, both FAILED) cannot be separated by activity: they need non-account evidence (search decoy in case_28,
+  images/PDFs) in Phase 4.
+- P2b: case_17's subject owns two accounts (account_4092 via evidence_01, account_6523 via evidence_67); chosen by
+  window. Phase 3 must decide whether a second owned account belongs in the footprint.
 
 - P2: account discovery (block 2b) not built: 15 sample account/audit/support resources have no explicit row in any
   text file (account_006/007/008/010/410/4163/4990/5037/5521/7012/8858, audit_record_5569/6645, support_001) and
@@ -103,6 +118,18 @@ Files: created `code/ghost/evidence/{__init__,base,sql,json_exports,logs,text,in
   ignore links and evidence after `audit_at` when choosing resources and citations.
 
 - P0: first cold `--counts` run took 5.4 s (pandas import cold cache); warm runs 1.6 s. Not a blocker.
+
+## Decisions and parameters (P2b)
+
+- P2b: signal 1 ignores `name` (too weak) and leaves a resource unattached when its rows resolve to >1 subject.
+- P2b: story pattern user_0N <-> account_00N applies only to user numbers 1..`STORY_USERS`=10 and only when an
+  evidence row confirms it (evidence_54 customer_reference user_05 on account_005); evidence ownership wins over it
+  (case_03 account_7566, case_09 account_3960 break the pattern).
+- P2b: window = [requested_at, reported_at + `REPORT_LAG` 15 min]; hits within `NEAR_REPORT_MIN`=90 min before
+  reported_at are preferred when any exist (248 ownership-confirmed eval accounts land 44-75 min before; samples -8..74).
+- P2b: elimination keyed by subject user_id (one user may file several requests); residual cases get a deterministic
+  greedy one-to-one assignment by (result mismatch, |minutes from reported_at|, case_id, account_id); `ambiguous=True`
+  and the reason string are the Phase 4 triage hook.
 
 ## Decisions and parameters (P2)
 
@@ -138,9 +165,17 @@ Files: created `code/ghost/evidence/{__init__,base,sql,json_exports,logs,text,in
 - P2: 74 log rows with present=None (analytics/support reads, legal `retained_order_loaded`) -> completed reads carry no
   http_status/rows -> treat `*_read_completed/_query_completed/_loaded` with no negative signal as present.
 
+- P2b: case_02/04/06/07/08/10 missed or ambiguous -> story accounts have no identifier in text evidence and their
+  DELETE_RECORD lands up to 5 min after reported_at (account_004 has no activity at all) -> added the evidence-confirmed
+  story numbering signal and a 15 min REPORT_LAG on the window.
+- P2b: case_28 and case_29 both tentatively chose account_7012 -> per-case choice ignored that each account has one
+  owner -> one-to-one greedy assignment across all requests (still swaps 28/29: genuinely symmetric, left to Phase 4).
+- P2b: 232 ambiguous eval cases with up to 8 candidates -> multi-day windows include other clusters' hits -> prefer
+  hits within 90 min of reported_at (221 ambiguous, max 6; samples still 32/32 contained).
+
 (append per tuning iteration; this is what the judges asked for)
 
 ## Next step
 
-Phase 2b (Account discovery): implement `code/ghost/discovery.py` + `--discovery` per the ACCOUNT DISCOVERY
-block in prompts.md Phase 2, using `EvidenceIndex.by_identifier` / `lookup_keys` for signal 1. Then Phase 3.
+Phase 3 (State engine + local grader): consume `discover()` results (chosen_account + resources per case) and
+build steps; paste the prompts.md "Phase 3" block.
