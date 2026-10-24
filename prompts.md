@@ -102,6 +102,31 @@ identity_service/ACCOUNT_TOMBSTONE, marketing_platform/MARKETING_PROFILE, cache_
 email_delivery_service/EMAIL_DELIVERY_LOG, legal_service/LEGAL_HOLD_RECORD).
 Add main.py --evidence <resource_id> printing all rows for a resource sorted by captured_at, and
 --coverage printing per-file row counts and per-format parse errors.
+
+ACCOUNT DISCOVERY (verified finding, highest-risk part of the problem). Every canonical answer names the
+subject's account_* id, but the account row in evidence usually carries NO identifier (404 / profile
+null / absent from table), and only ~200 of 518 subjects have an account tied to them by an identifier
+anywhere in text evidence. Implement code/ghost/discovery.py with these signals, combined in this order,
+and print per-case candidate counts:
+ 1. Evidence ownership: any evidence row (any file, any capture time, incl. after audit_at - linkage is
+    not state) whose identifiers (email, hash, phone digits, user_id as customer_reference /
+    subject_reference / lookup_key) resolve to exactly one subject attaches that resource_id to the
+    subject via Subject.add_resource. For logs join *_started lookup_key to *_completed resource_id by
+    trace_id. Numbering pattern user_0N <-> account_00N exists only for the first ten story users and is
+    confirmed by SQL rows (account_005 / user_05); do not generalize it.
+ 2. Activity window: deletion_worker DELETE_RECORD on account_* occurs once per account (539 activities,
+    539 distinct accounts) and lands between requested_at and reported_at, typically 0-75 minutes before
+    reported_at. reported_result maps COMPLETE->SUCCESS, PARTIALLY_COMPLETE->PARTIAL, NOT_STARTED->FAILED
+    (two story samples break this, so use it as a preference, not a filter). CLASSIFY_REQUEST
+    (10 rows) marks non-deletion intake accounts the same way.
+ 3. Elimination: remove accounts owned by another subject (signal 1) and accounts uniquely assigned to
+    another case; iterate to a fixed point across all 550 requests (518 + 32 samples).
+ 4. Residual ambiguity (expected ~150 cases with 2-6 candidates sharing one reported_at cluster): record
+    the candidate set on the Subject, prefer result-matched candidates, and leave a hook for Phase 4
+    triage. Never silently pick; log the choice and reason.
+Checks for discovery: --discovery prints the candidate-set size histogram over 518 and, for the 32
+samples, exact / contained / miss against the account ids in sample_output.csv. Target: all 32 contained,
+>= 28 exact, and the Diagnosis log records what each failing sample needed.
 Checks: --coverage parses all non-image, non-pdf files with zero errors. For every sample step
 with a non-empty evidence_id, assert the (file_id, resource_id) pair exists in the index and
 captured_at <= that case's audit_at. Print the list of sample resources with no row anywhere (these

@@ -78,6 +78,11 @@ Files: created `code/ghost/identity.py`; changed `code/main.py` (`--subject`, `-
 
 - P1: 0/32 sample account ids linkable from activity; Phase 2 evidence parsers must call `Subject.add_resource`
   with `customer_reference` / `subject_reference` / `lookup_key=user_N` matches, then `IdentityIndex.reindex()`.
+- P1-verifier: account discovery is the critical path. Probe results: evidence identifiers tie an account to
+  a subject for ~200/518 cases; the activity window alone gives 342 unique / 168 ambiguous / 9 none; the two
+  combined with elimination are the Phase 2 design (see prompts.md Phase 2 "ACCOUNT DISCOVERY"). Samples
+  case_01..case_10 rely on the account_00N pattern plus SQL rows; case_31/32 accounts (4857/8858) appear
+  nowhere with an identifier and resolve only through the window + elimination.
 - P1: identity history is not yet time-filtered; LINK activity_4000 is dated 2026-09-26, so Phase 3 must
   ignore links and evidence after `audit_at` when choosing resources and citations.
 
