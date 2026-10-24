@@ -444,5 +444,13 @@ copy .env.example to .env, python code/main.py (cache makes it zero-call), --ref
 live re-extraction, every debug command. Confirm no secrets in the tree (grep for the key prefix
 pattern and for LLM_API_KEY= with a value). Build code.zip containing README.md and code/ only
 (exclude __pycache__, .env, dataset/, log.txt). Verify output.csv has 519 lines and --audit passes.
+Also: (a) replace the empty starter code/evaluation/main.py with a thin wrapper that runs the grader,
+the custom cases and the audit (python code/evaluation/main.py == --grade + --grade-custom + --audit) so
+the starter path the README names does something useful; (b) prove the fresh-unzip run: extract code.zip
+into a temp directory, copy dataset/ next to it, run `python code/main.py` there with a .env that has an
+EMPTY key, and confirm output.csv is byte-identical to the repo's (cached run, zero calls); (c) README
+must state the sample metrics, the known limits (account ties, missing audit records) and the exact
+commands behind every number, and must not mention any model id that is not in usage_report.md;
+(d) confirm log.txt has one SESSION START per phase session and no "[...]" elisions after Phase 2.
 List final files with sizes. Mark Phase 7 DONE.
 ```
