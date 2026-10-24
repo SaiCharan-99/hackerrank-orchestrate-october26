@@ -175,6 +175,8 @@ def audit_case(request, subjects, evidence_index, rules, activity, *, authorizes
         return ca
     if disc.ambiguous:
         ca.notes.append(f"account choice tentative: {disc.reason}")
+    if not disc.chosen_account:
+        ca.notes.append("account unknown: no account activity or evidence ties an account to this request")
     ca.notes += [f"policy-linked record {part.strip()}" for part in disc.reason.split(";") if "tentatively linked" in part]
     actions = rule_actions(rules)
 

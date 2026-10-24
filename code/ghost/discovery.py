@@ -34,8 +34,9 @@ STORY_USERS = 10
 # Story workflows log the DELETE_RECORD a few minutes after the status report (case_02 +5 min, case_10 +1 min).
 REPORT_LAG = pd.Timedelta(minutes=15)
 # Owned accounts land 44-75 min before reported_at (248 ownership-confirmed evaluation cases, all 32 samples
-# within -8..74); hits in this band are preferred over older hits from other clusters in a multi-day window.
-NEAR_REPORT_MIN = 90
+# within -8..74), but some clusters log the account activity 2h05-2h15 before reported_at; hits in this band
+# are preferred over older hits from other clusters in a multi-day window.
+NEAR_REPORT_MIN = 150
 # Policy actions on dependent records land between 29 min before and 114 min after reported_at (samples).
 POLICY_BEFORE = pd.Timedelta(minutes=90)
 POLICY_AFTER = pd.Timedelta(minutes=150)
@@ -212,14 +213,45 @@ def discover(data, ids: IdentityIndex, evidence) -> dict[str, Discovery]:
         d.reason += (f"; AMBIGUOUS {len(d.account_candidates)} candidates, tentatively chose {a} "
                      f"({'result-matched' if cost[0] == 0 else 'no result match'}, "
                      f"{cost[1]:.0f} min from reported_at, one-to-one assignment)")
+    leftover_pass(data, out, taken, by_subject)
     for d in out.values():
-        if d.ambiguous and not d.chosen_account:
-            d.reason += "; AMBIGUOUS, every candidate taken by another subject; left unchosen"
+        if not d.chosen_account:
+            d.reason += "; account unknown (no orphan account activity in the request window)"
         if d.subject:
             d.resources = sorted((d.subject.resource_ids - d.subject.account_ids)
                                  | ({d.chosen_account} if d.chosen_account else set()))
     link_policy_actions(data, out, owners, evidence)
     return out
+
+
+def leftover_pass(data, out: dict[str, Discovery], taken: dict[str, str], by_subject: dict[str, str]) -> None:
+    """Signal 4b: unchosen cases take orphan account activities (window events on accounts chosen by no case)
+    inside [requested_at, reported_at + REPORT_LAG]; result-matched first, then nearest to reported_at,
+    assigned one-to-one across the leftover cases."""
+    left = [d for d in out.values() if not d.chosen_account and d.subject and d.subject.user_id not in by_subject]
+    if not left:
+        return
+    chosen = {d.chosen_account for d in out.values() if d.chosen_account}
+    reqs = pd.concat([data.requests, data.sample_requests], ignore_index=True).set_index("case_id")
+    pairs, pools = [], {}
+    for d in left:
+        r = reqs.loc[d.case_id]
+        hits = [h for h in window_hits(data.activity, r.requested_at, r.reported_at, r.reported_status)
+                if h.account_id not in chosen and h.account_id not in taken]
+        pools[d.case_id] = sorted({h.account_id for h in hits})
+        for h in hits:
+            pairs.append(((0 if h.result_match else 1, abs(h.minutes_before_report)), d.case_id, h.account_id))
+    used: set[str] = set()
+    for cost, cid, a in sorted(pairs):
+        d = out[cid]
+        if d.chosen_account or a in used or d.subject.user_id in by_subject:
+            continue
+        d.chosen_account, d.ambiguous = a, True
+        used.add(a)
+        taken[a], by_subject[d.subject.user_id] = d.subject.user_id, a
+        d.reason += (f"; AMBIGUOUS leftover pass: orphan pool {','.join(pools[cid])}, chose {a} "
+                     f"({'result-matched' if cost[0] == 0 else 'no result match'}, "
+                     f"{cost[1]:.0f} min from reported_at)")
 
 
 def _user_no(uid: str) -> int:

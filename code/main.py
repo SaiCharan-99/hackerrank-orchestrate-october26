@@ -191,6 +191,9 @@ def cmd_discovery() -> int:
         print(f"  {size:>2} candidates: {hist[size]:>4}")
     amb = sum(results[c].ambiguous for c in eval_ids)
     print(f"Ambiguous (tentative choice, Phase 4 triage): {amb}  resolved: {sum(1 for c in eval_ids if results[c].chosen_account and not results[c].ambiguous)}")
+    print(f"Evaluation cases with chosen_account=None: {sum(results[c].chosen_account is None for c in eval_ids)}"
+          + "".join(f"  [{c} {results[c].subject.user_id if results[c].subject else '-'}]"
+                    for c in eval_ids if results[c].chosen_account is None))
     print(f"Mean non-account resources per subject: "
           f"{sum(len(results[c].resources) for c in eval_ids) / len(eval_ids):.1f}")
     out = dict(zip(data.sample_output["case_id"], data.sample_output["steps_json"]))
