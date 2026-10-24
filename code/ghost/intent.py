@@ -65,7 +65,7 @@ def _save(cache: dict) -> None:
 
 
 def classify_texts(texts, llm=None, model: str = "", *, refresh: bool = False,
-                   only_cached: bool = False) -> dict[str, Intent]:
+                   only_cached: bool = False, purpose: str = "intent") -> dict[str, Intent]:
     """text -> Intent for every distinct text. Without a model result the fallback is deletion=True with
     source 'fallback' (the activity cross-check then flags it), so a run never stops on a missing label."""
     from .llm import BudgetExceeded, ExtractionFailed
@@ -87,7 +87,7 @@ def classify_texts(texts, llm=None, model: str = "", *, refresh: bool = False,
             out[text] = Intent(True, "not classified (no cached label); defaulted to deletion", "", "fallback")
             continue
         try:
-            lab = llm.structured(IntentLabel, model, P.CLASSIFY.format(text=text), purpose="intent", item=h[:12],
+            lab = llm.structured(IntentLabel, model, P.CLASSIFY.format(text=text), purpose=purpose, item=h[:12],
                                  max_tokens=300)
         except (ExtractionFailed, BudgetExceeded) as exc:
             out[text] = Intent(True, f"extraction_failed: {str(exc)[:120]}; defaulted to deletion", "", "fallback")

@@ -76,10 +76,13 @@ def ledger_entries(path: Path = USAGE_LOG) -> list[dict]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
-def ledger_totals(path: Path = USAGE_LOG) -> dict[str, dict[str, float]]:
-    """Per-model and overall totals (calls, prompt/completion tokens, estimated cost)."""
+def ledger_totals(path: Path = USAGE_LOG, keep=None) -> dict[str, dict[str, float]]:
+    """Per-model and overall totals (calls, prompt/completion tokens, estimated cost).
+    `keep(entry) -> bool` filters ledger lines (e.g. pipeline calls only, without custom-case calls)."""
     out: dict[str, dict[str, float]] = {}
     for e in ledger_entries(path):
+        if keep is not None and not keep(e):
+            continue
         for key in (e["model"], "ALL"):
             t = out.setdefault(key, {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0})
             t["calls"] += 1

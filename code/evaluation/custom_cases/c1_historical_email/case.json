@@ -1,0 +1,75 @@
+{
+  "name": "c1_historical_email",
+  "kind": "custom",
+  "description": "The request arrives from a historical email (changed in the audit log). The profile row carries only the current email, so the case is solved only if audit-log history resolves the subject.",
+  "request": {
+    "case_id": "custom_01",
+    "email": "linnea.voss@fastmail.com",
+    "requested_at": "2026-09-08T08:00:00Z",
+    "reported_status": "COMPLETE",
+    "reported_at": "2026-09-10T02:00:00Z",
+    "audit_at": "2026-09-12T13:00:00Z",
+    "request_text": "Please permanently delete my account and erase all personal data you hold about me."
+  },
+  "identities": [
+    {
+      "user_id": "user_c1",
+      "name": "Linnea Holm",
+      "email": "linnea.holm@proton.me",
+      "phone": "+46 70 412 8836",
+      "email_hash": "1d894f8a9663a83e9ae85a5be7ca273f5116ddcbf54e08154badef76094c9057",
+      "updated_at": "2026-05-01T09:00:00Z"
+    }
+  ],
+  "audit_log": [
+    {
+      "audit_id": "caud_101",
+      "user_id": "user_c1",
+      "event_time": "2026-03-02T10:15:00Z",
+      "field_name": "email",
+      "old_value": "linnea.voss@fastmail.com",
+      "new_value": "linnea.holm@proton.me"
+    }
+  ],
+  "activity": [],
+  "evidence": [
+    {
+      "file_id": "cev_101",
+      "file_path": "evidence/customer_profiles_primary_20260911.sql",
+      "origin": "custom_case_snapshot",
+      "captured_at": "2026-09-11T12:00:00Z"
+    }
+  ],
+  "expected": {
+    "deletion_status": "INCOMPLETE",
+    "steps": [
+      {
+        "step_no": 1,
+        "phase": "FINDING",
+        "system_id": "account_service",
+        "resource_id": "account_9101",
+        "operation": "REPORT_REMAINING_RECORD",
+        "state": "PRESENT",
+        "evidence_id": "cev_101"
+      },
+      {
+        "step_no": 2,
+        "phase": "REMEDIATION",
+        "system_id": "account_service",
+        "resource_id": "account_9101",
+        "operation": "DELETE_RECORD",
+        "state": "ABSENT",
+        "evidence_id": ""
+      },
+      {
+        "step_no": 3,
+        "phase": "VERIFICATION",
+        "system_id": "account_service",
+        "resource_id": "account_9101",
+        "operation": "VERIFY_RECORD_ABSENT",
+        "state": "ABSENT",
+        "evidence_id": ""
+      }
+    ]
+  }
+}

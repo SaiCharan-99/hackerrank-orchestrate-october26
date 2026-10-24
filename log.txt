@@ -635,3 +635,75 @@ branch=main
 repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-24T21:55:45Z] SESSION START
+
+tool=Claude Code
+model=claude-opus-5-5
+Repo Root: C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+Branch: main
+Worktree: main
+Parent Agent: none
+Language: py
+Time Remaining: not configured
+
+## [2026-10-24T22:05:15Z] Phase 6 custom/adversarial cases, --grade-custom, evaluation + usage reports
+
+User Prompt (verbatim, secrets redacted):
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+
+Create code/evaluation/custom_cases/ with at least five hand-authored cases, each a small
+request row plus a synthetic evidence file and an expected steps list: historical-email
+resolution; replica drift; evidence dated after audit_at that must be ignored; tombstone with
+exposed PII; non-deletion request in a non-English language. Create adversarial inputs: a support
+message containing embedded instructions, an uppercase and whitespace-padded email, a one-
+character decoy email, a malformed OCR-like row. Add --grade-custom to run them through the same
+engine and grader.
+Write code/evaluation/evaluation_report.md (case-level status accuracy, step-level and field-level
+accuracy, sequence accuracy, the custom cases and results, failures found and improvements made
+from the Diagnosis log) and code/evaluation/usage_report.md (per-model and overall calls, input and
+output tokens, totals, averages per request over 518, estimated total and per-request cost) from
+the grader and usage ledger. Also write code/evaluation/interview_checklist.md per APPROACH.md §8.
+Checks: --grade-custom all pass; both reports contain numbers that match the printed outputs.
+
+Agent Response Summary:
+Confirmed phases 0-5 DONE, then built 9 hand-authored cases (5 custom, 4 adversarial) as mini datasets with synthetic
+evidence and hand-written expected steps, plus code/ghost/custom_cases.py and --grade-custom, which run them through the same
+evidence index, identity graph, discovery, intent classifier, engine and grader: 9/9 pass. Wrote evaluation_report.md (samples
+status 1.000, 26/32 exact, recall 0.969, precision 0.979, sequence 0.812, pairwise 1.000; full run and harm signals; custom
+results; diagnosis history), usage_report.md (182 pipeline calls, 245,695 in / 50,875 out tokens, est. $0.9714, $0.001875 and
+572.5 tokens per request over 518; the 1 custom-case call reported separately) and interview_checklist.md. Report numbers were
+cross-checked against the printed outputs; output.csv is unchanged and --audit still exits 0.
+
+Diagnosis: SyntaxError in main.py after a scripted edit -> the bash heredoc turned the Python source "\n" escape into a real newline -> rewrote those lines with the file editor and re-ran.
+Diagnosis: ledger mixed 1 custom-case call with 182 pipeline calls -> usage report must cover only the run behind output.csv -> purpose intent-custom plus ledger_totals(keep=) filter in --usage.
+
+Actions:
+* created code/ghost/custom_cases.py, code/evaluation/custom_cases/build_cases.py and 9 case directories (case.json + evidence/)
+* created code/evaluation/evaluation_report.md, usage_report.md, interview_checklist.md
+* edited code/main.py (--grade-custom, --usage split + per-request averages), code/ghost/intent.py (purpose kwarg), code/ghost/llm.py (ledger_totals keep=), progress.md
+* ran build_cases.py; python code/main.py --grade-custom; --usage; --grade; python code/main.py; --audit (1 gateway call: intent for custom case c5)
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=main
+repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

@@ -1,0 +1,66 @@
+{
+  "name": "c4_tombstone_exposed_pii",
+  "kind": "custom",
+  "description": "The account tombstone keeps the stable user reference (allowed) but still carries name, email, phone and email hash (prohibited by rule_15): report exposed PII, redact, verify redacted.",
+  "request": {
+    "case_id": "custom_04",
+    "email": "oskar.lindqvist@icloud.com",
+    "requested_at": "2026-09-08T08:00:00Z",
+    "reported_status": "COMPLETE",
+    "reported_at": "2026-09-10T02:00:00Z",
+    "audit_at": "2026-09-12T13:00:00Z",
+    "request_text": "Please permanently delete my account and erase all personal data you hold about me."
+  },
+  "identities": [
+    {
+      "user_id": "user_c4",
+      "name": "Oskar Lindqvist",
+      "email": "oskar.lindqvist@icloud.com",
+      "phone": "+46 76 204 9913",
+      "email_hash": "c1bb29bb00a9ddfa83548b623b2e8440b13896d3753eb7117ed11b63ac5621b8",
+      "updated_at": "2026-05-01T09:00:00Z"
+    }
+  ],
+  "audit_log": [],
+  "activity": [],
+  "evidence": [
+    {
+      "file_id": "cev_401",
+      "file_path": "evidence/deleted_references_20260911.sql",
+      "origin": "custom_case_snapshot",
+      "captured_at": "2026-09-11T12:00:00Z"
+    }
+  ],
+  "expected": {
+    "deletion_status": "INCOMPLETE",
+    "steps": [
+      {
+        "step_no": 1,
+        "phase": "FINDING",
+        "system_id": "identity_service",
+        "resource_id": "tombstone_9401",
+        "operation": "REPORT_EXPOSED_PII",
+        "state": "PRESENT",
+        "evidence_id": "cev_401"
+      },
+      {
+        "step_no": 2,
+        "phase": "REMEDIATION",
+        "system_id": "identity_service",
+        "resource_id": "tombstone_9401",
+        "operation": "REDACT_RECORD",
+        "state": "REDACTED",
+        "evidence_id": ""
+      },
+      {
+        "step_no": 3,
+        "phase": "VERIFICATION",
+        "system_id": "identity_service",
+        "resource_id": "tombstone_9401",
+        "operation": "VERIFY_RECORD_REDACTED",
+        "state": "REDACTED",
+        "evidence_id": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "name": "a2_padded_uppercase_email",
+  "kind": "adversarial",
+  "description": "The request email is upper-case and padded with spaces; resolution must normalize it to the subject.",
+  "request": {
+    "case_id": "custom_a2",
+    "email": "   MEI.TANAKA@OUTLOOK.JP  ",
+    "requested_at": "2026-09-08T08:00:00Z",
+    "reported_status": "COMPLETE",
+    "reported_at": "2026-09-10T02:00:00Z",
+    "audit_at": "2026-09-12T13:00:00Z",
+    "request_text": "Please permanently delete my account and erase all personal data you hold about me."
+  },
+  "identities": [
+    {
+      "user_id": "user_a2",
+      "name": "Mei Tanaka",
+      "email": "mei.tanaka@outlook.jp",
+      "phone": "+81 90 4417 2280",
+      "email_hash": "b4cfda5f11aeaca961a77b69031c4e6a305849ac53673a19219a150a844899da",
+      "updated_at": "2026-05-01T09:00:00Z"
+    }
+  ],
+  "audit_log": [],
+  "activity": [],
+  "evidence": [
+    {
+      "file_id": "cev_a201",
+      "file_path": "evidence/customer_profiles_primary_20260911.sql",
+      "origin": "custom_case_snapshot",
+      "captured_at": "2026-09-11T12:00:00Z"
+    }
+  ],
+  "expected": {
+    "deletion_status": "INCOMPLETE",
+    "steps": [
+      {
+        "step_no": 1,
+        "phase": "FINDING",
+        "system_id": "account_service",
+        "resource_id": "account_9621",
+        "operation": "REPORT_REMAINING_RECORD",
+        "state": "PRESENT",
+        "evidence_id": "cev_a201"
+      },
+      {
+        "step_no": 2,
+        "phase": "REMEDIATION",
+        "system_id": "account_service",
+        "resource_id": "account_9621",
+        "operation": "DELETE_RECORD",
+        "state": "ABSENT",
+        "evidence_id": ""
+      },
+      {
+        "step_no": 3,
+        "phase": "VERIFICATION",
+        "system_id": "account_service",
+        "resource_id": "account_9621",
+        "operation": "VERIFY_RECORD_ABSENT",
+        "state": "ABSENT",
+        "evidence_id": ""
+      }
+    ]
+  }
+}

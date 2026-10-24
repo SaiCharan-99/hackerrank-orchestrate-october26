@@ -180,3 +180,4 @@
 {"completion_tokens": 269, "cost_usd": 0.01269, "item": "evidence_60", "latency_s": 2.852, "model": "claude-sonnet", "prompt_tokens": 2885, "provider": "anthropic", "purpose": "vision", "ts": "2026-10-24T21:39:58Z"}
 {"completion_tokens": 14, "cost_usd": 0.001117, "item": "evidence_60", "latency_s": 0.917, "model": "bedrock/qwen.qwen3-vl-235b-a22b", "prompt_tokens": 2038, "provider": "bedrock:qwen", "purpose": "vision", "ts": "2026-10-24T21:39:59Z"}
 {"completion_tokens": 466, "cost_usd": 0.01401, "item": "evidence_60", "latency_s": 3.956, "model": "claude-sonnet", "prompt_tokens": 2340, "provider": "anthropic", "purpose": "vision_reconcile", "ts": "2026-10-24T21:40:03Z"}
+{"completion_tokens": 70, "cost_usd": 0.000786, "item": "b9ad1f4b93c8", "latency_s": 6.132, "model": "claude-haiku", "prompt_tokens": 436, "provider": "anthropic", "purpose": "intent-custom", "ts": "2026-10-24T21:59:29Z"}

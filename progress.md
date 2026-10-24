@@ -26,7 +26,7 @@ Design reference: `APPROACH.md`. Output contract: `AGENTS.md` §6. Phase prompts
 | 3b | Discovery fix: orphan accounts, unchosen cases (prompts.md Phase 3b) | DONE | --discovery chosen=None count is 1; --grade >= 25/32 |
 | 4 | Vision extraction + intent classifier + triage | DONE | vision agreement pass clean; `NOT_APPLICABLE` set agrees with `CLASSIFY_REQUEST` activities |
 | 5 | Full run + validator | DONE | `output.csv` 518 rows, validator PASS, zero future-evidence citations |
-| 6 | Evaluation reports + custom/adversarial cases | TODO | `code/evaluation/evaluation_report.md` and `usage_report.md` filled from grader/ledger output |
+| 6 | Evaluation reports + custom/adversarial cases | DONE | `code/evaluation/evaluation_report.md` and `usage_report.md` filled from grader/ledger output |
 | 7 | README, interview checklist, code.zip | TODO | zip = `README.md` + `code/`, no dataset/.env/log; clean run from a fresh unzip |
 
 ## Fixed facts (do not re-derive)
@@ -123,6 +123,28 @@ runs the cached pipeline (0 LLM calls; ledger unchanged at 182) and validates: P
 determinism match, harm signals 0.000 / 0.012 / 0.467 / 0; status 153 C / 355 I / 10 NA vs samples 10 / 22 / 0.
 Files: created `code/ghost/output.py`, `output.csv`; changed `code/main.py` (default run, `--audit`).
 
+## Phase 6 summary (DONE 2026-10-25)
+
+9 hand-authored cases in `code/evaluation/custom_cases/` (5 custom: historical email, replica drift, post-audit_at evidence,
+tombstone exposed PII, Spanish access request; 4 adversarial: embedded instructions, padded upper-case email, one-char decoy,
+OCR-damaged rows) run through the same loader/discovery/intent/engine/grader via `--grade-custom`: 9/9 pass, first run.
+Reports written from printed output: samples 26/32 exact, status 1.000, recall 0.969, precision 0.979, sequence 0.812;
+pipeline usage 182 calls, 245,695 in / 50,875 out, est. $0.9714 ($0.001875 / request over 518). output.csv unchanged.
+Files: created `code/ghost/custom_cases.py`, `code/evaluation/custom_cases/build_cases.py` + 9 case dirs (case.json + evidence),
+`code/evaluation/{evaluation_report,usage_report,interview_checklist}.md`; changed `code/main.py` (`--grade-custom`, `--usage`
+pipeline/custom split with per-request averages), `code/ghost/intent.py` (`purpose` kwarg), `code/ghost/llm.py`
+(`ledger_totals(keep=)`), caches `intent.json` + `usage_log.jsonl` (+1 intent-custom call).
+
+## Decisions and parameters (P6)
+
+- P6: a custom case is a mini `Dataset` (one request, its identities/audit_log/activity, manifest, synthetic evidence) built by
+  `custom_cases.load_case`; rules are the real `dataset/deletion_rules.csv`; empty sample tables. Same functions as `main._audits`.
+- P6: expected answers are hand-written in `build_cases.py` from the rules, never produced by the engine.
+- P6: custom-case LLM calls use purpose `intent-custom`; `--usage` reports pipeline calls (what produced output.csv) separately,
+  averages over the 518 evaluation requests.
+- P6: reports quote command output verbatim; numbers were cross-checked line by line against `--grade`, `--grade-custom`,
+  `--audit` and `--usage` output.
+
 ## Decisions and parameters (P5)
 
 - P5: citable ids = manifest file_id (captured_at), activity_id (event_time), audit_id (event_time); unknown id = error.
@@ -196,6 +218,9 @@ Files: created `code/ghost/output.py`, `output.csv`; changed `code/main.py` (def
 - P0: role model defaults mirror `.env.example` (vision `claude-sonnet`, vision B `bedrock/qwen.qwen3-vl-235b-a22b`, text `claude-haiku`, triage `claude-sonnet`, budget $10).
 
 ## Open issues
+
+- P6: costs are estimates from `llm.PRICES`; gateway invoice pricing was not available to confirm them.
+- P6: custom cases cover text/SQL formats only; image-side OCR risks are documented from Phase 4 probes, not as a custom case.
 
 - P5: NOT_APPLICABLE share 1.9% eval vs 0% samples (samples contain no non-deletion requests; not a signal of error).
 - P5: vision_disagreement_rate 0.467 is pre-reconciliation; all 7 resolved by third pass, 0 extraction_failed.
@@ -294,6 +319,11 @@ Files: created `code/ghost/output.py`, `output.csv`; changed `code/main.py` (def
 
 ## Diagnosis log (signal → cause → change)
 
+- P6: SyntaxError (unterminated string) in main.py after a scripted edit -> the bash heredoc turned the Python source `\n`
+  into a real newline -> rewrote those lines with the file editor (no escapes) and re-ran the commands.
+- P6: ledger mixed one custom-case call with the 182 pipeline calls -> usage report must describe only the run behind
+  output.csv -> `intent-custom` purpose plus `ledger_totals(keep=)` filter in `--usage`.
+
 - P5: bash printf of SESSION START failed (`missing unicode digit for \U`) -> Windows path `C:\Users` read as a printf escape -> appended via heredoc instead.
 - P5: step-count print used a nested-quote f-string (needs Python 3.12+) -> portability risk for graders on older Python -> precomputed `n_steps`.
 
@@ -358,5 +388,5 @@ Files: created `code/ghost/output.py`, `output.csv`; changed `code/main.py` (def
 
 ## Next step
 
-Phase 6 (Evaluation reports + custom/adversarial cases): fill `code/evaluation/evaluation_report.md` from `--grade`
-and `usage_report.md` from `--usage`; at least three custom cases. Paste the prompts.md "Phase 6" block.
+Phase 7 (README, packaging): README setup/run instructions, code.zip = README.md + code/ (no dataset/.env/log), clean run
+from a fresh unzip. Paste the prompts.md "Phase 7" block.

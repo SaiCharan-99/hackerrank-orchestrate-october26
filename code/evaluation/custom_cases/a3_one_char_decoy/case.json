@@ -1,0 +1,48 @@
+{
+  "name": "a3_one_char_decoy",
+  "kind": "adversarial",
+  "description": "The subject's export is confirmed gone. A search entry for an email one character different (jon.ek1 vs jon.ek) belongs to nobody known and must not be attributed: COMPLETE, one verification.",
+  "request": {
+    "case_id": "custom_a3",
+    "email": "jon.ek@gmail.com",
+    "requested_at": "2026-09-08T08:00:00Z",
+    "reported_status": "COMPLETE",
+    "reported_at": "2026-09-10T02:00:00Z",
+    "audit_at": "2026-09-12T13:00:00Z",
+    "request_text": "Please permanently delete my account and erase all personal data you hold about me."
+  },
+  "identities": [
+    {
+      "user_id": "user_a3",
+      "name": "Jon Ek",
+      "email": "jon.ek@gmail.com",
+      "phone": "+47 912 33 804",
+      "email_hash": "3158fcbeecfd9f1c34341993763be615f6d07ac42d2f5a469b0233bc5a77e94a",
+      "updated_at": "2026-05-01T09:00:00Z"
+    }
+  ],
+  "audit_log": [],
+  "activity": [],
+  "evidence": [
+    {
+      "file_id": "cev_a301",
+      "file_path": "evidence/export_and_search_handover_20260911.txt",
+      "origin": "custom_case_snapshot",
+      "captured_at": "2026-09-11T09:00:00Z"
+    }
+  ],
+  "expected": {
+    "deletion_status": "COMPLETE",
+    "steps": [
+      {
+        "step_no": 1,
+        "phase": "VERIFICATION",
+        "system_id": "export_service",
+        "resource_id": "export_9631",
+        "operation": "VERIFY_RECORD_ABSENT",
+        "state": "ABSENT",
+        "evidence_id": "cev_a301"
+      }
+    ]
+  }
+}

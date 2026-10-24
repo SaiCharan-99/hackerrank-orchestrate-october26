@@ -195,6 +195,13 @@
     "source": "model:claude-haiku",
     "text": "このメールアドレスに関連するアカウントの完全な削除を依頼します。 プライバシー手続きに従い、現在および過去の識別情報を確認してください。 確認が完了したら結果をお知らせください。"
   },
+  "b9ad1f4b93c856ffb126bf66c0d438c86452d8f41af27809293756243a45a053": {
+    "authorizes_deletion": false,
+    "language": "es",
+    "reason": "The request asks for a copy of personal data and explicitly states that the account should not be deleted, so it is an access request, not a deletion request.",
+    "source": "model:claude-haiku",
+    "text": "Hola, quisiera recibir una copia de todos mis datos personales. No quiero eliminar mi cuenta, solo saber qué información guardan sobre mí."
+  },
   "c2654fd69d75d71525218b6f9ac977f19ff77a6c494007c7d90220479b87f606": {
     "authorizes_deletion": false,
     "language": "en",

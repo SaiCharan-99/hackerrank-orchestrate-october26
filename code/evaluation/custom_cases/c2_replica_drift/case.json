@@ -1,0 +1,74 @@
+{
+  "name": "c2_replica_drift",
+  "kind": "custom",
+  "description": "The primary table no longer lists the subject's account, but the reporting replica still holds the full profile. Replica drift means the record is still present; the other user's account is ignored.",
+  "request": {
+    "case_id": "custom_02",
+    "email": "tomas.bergqvist@outlook.com",
+    "requested_at": "2026-09-08T08:00:00Z",
+    "reported_status": "COMPLETE",
+    "reported_at": "2026-09-10T02:00:00Z",
+    "audit_at": "2026-09-12T13:00:00Z",
+    "request_text": "Please permanently delete my account and erase all personal data you hold about me."
+  },
+  "identities": [
+    {
+      "user_id": "user_c2",
+      "name": "Tomás Bergqvist",
+      "email": "tomas.bergqvist@outlook.com",
+      "phone": "+46 73 551 2047",
+      "email_hash": "0b723054506c734e1a2cf0f16942abdcd0b05baf04b8b51cbfaede01da81e8e3",
+      "updated_at": "2026-05-01T09:00:00Z"
+    },
+    {
+      "user_id": "user_c2b",
+      "name": "Ines Carvalho",
+      "email": "ines.carvalho@gmail.com",
+      "phone": "+351 912 330 448",
+      "email_hash": "228e77cfd928d0da432c58de947a6e7e7f5e3a2ef3011939473481e09e73448f",
+      "updated_at": "2026-05-01T09:00:00Z"
+    }
+  ],
+  "audit_log": [],
+  "activity": [],
+  "evidence": [
+    {
+      "file_id": "cev_201",
+      "file_path": "evidence/customer_data_replicas_20260911.sql",
+      "origin": "custom_case_snapshot",
+      "captured_at": "2026-09-11T12:00:00Z"
+    }
+  ],
+  "expected": {
+    "deletion_status": "INCOMPLETE",
+    "steps": [
+      {
+        "step_no": 1,
+        "phase": "FINDING",
+        "system_id": "account_service",
+        "resource_id": "account_9201",
+        "operation": "REPORT_REMAINING_RECORD",
+        "state": "PRESENT",
+        "evidence_id": "cev_201"
+      },
+      {
+        "step_no": 2,
+        "phase": "REMEDIATION",
+        "system_id": "account_service",
+        "resource_id": "account_9201",
+        "operation": "DELETE_RECORD",
+        "state": "ABSENT",
+        "evidence_id": ""
+      },
+      {
+        "step_no": 3,
+        "phase": "VERIFICATION",
+        "system_id": "account_service",
+        "resource_id": "account_9201",
+        "operation": "VERIFY_RECORD_ABSENT",
+        "state": "ABSENT",
+        "evidence_id": ""
+      }
+    ]
+  }
+}

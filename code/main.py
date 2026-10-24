@@ -15,6 +15,7 @@ Usage:  python code/main.py                 (full run from caches, writes output
         python code/main.py --classify-intent [--refresh-cache]
         python code/main.py --triage [--refresh-cache]
         python code/main.py --usage
+        python code/main.py --grade-custom   (custom + adversarial cases in code/evaluation/custom_cases/)
 """
 from __future__ import annotations
 
@@ -331,20 +332,42 @@ def cmd_case(case_id: str) -> int:
     return 0
 
 
-def _usage_table() -> str:
-    from ghost.llm import ledger_totals
+CUSTOM_PURPOSES = {"intent-custom"}  # calls made by --grade-custom, not by the dataset pipeline
 
-    t = ledger_totals()
-    lines = [f"  {'model':<36} {'calls':>5} {'prompt_tok':>10} {'compl_tok':>9} {'est_usd':>8}"]
+
+def _usage_table(keep=None, title="Usage ledger (code/cache/usage_log.jsonl)", per_request: int = 0) -> str:
+    from ghost.llm import ledger_totals, provider_for
+
+    t = ledger_totals(keep=keep)
+    head = f"  {'model':<36} {'provider':<14} {'calls':>5} {'input_tok':>10} {'output_tok':>10} {'total_tok':>10} {'est_usd':>8}"
+    if per_request:
+        head += f" {'tok/req':>8} {'usd/req':>9}"
+    lines = [head]
     for m in sorted(t, key=lambda k: (k == "ALL", k)):
         v = t[m]
-        lines.append(f"  {m:<36} {v['calls']:>5} {v['prompt_tokens']:>10} {v['completion_tokens']:>9} "
-                     f"{v['cost_usd']:>8.4f}")
-    return "Usage ledger (code/cache/usage_log.jsonl)\n" + "\n".join(lines)
+        tot = v["prompt_tokens"] + v["completion_tokens"]
+        line = (f"  {m:<36} {'-' if m == 'ALL' else provider_for(m):<14} {v['calls']:>5} {v['prompt_tokens']:>10} "
+                f"{v['completion_tokens']:>10} {tot:>10} {v['cost_usd']:>8.4f}")
+        if per_request:
+            line += f" {tot / per_request:>8.1f} {v['cost_usd'] / per_request:>9.6f}"
+        lines.append(line)
+    return "\n".join([title, *lines])
 
 
 def cmd_usage() -> int:
-    print(_usage_table())
+    """Pipeline usage (what produced output.csv) with per-request averages, then custom-case and full ledger."""
+    from collections import Counter
+
+    from ghost.llm import ledger_entries
+
+    n = len(load_all(DATASET_DIR).requests)
+    pipeline = lambda e: e["purpose"] not in CUSTOM_PURPOSES  # noqa: E731
+    print(_usage_table(pipeline, f"Pipeline usage (all LLM calls behind output.csv; averages over {n} requests)",
+                       per_request=n))
+    by_purpose = Counter(e["purpose"] for e in ledger_entries())
+    print("Calls by purpose: " + ", ".join(f"{k}={v}" for k, v in sorted(by_purpose.items())))
+    print(_usage_table(lambda e: not pipeline(e), "Custom-case calls (--grade-custom; not part of output.csv)"))
+    print(_usage_table(title="Whole ledger"))
     return 0
 
 
@@ -471,6 +494,38 @@ def cmd_triage(refresh: bool) -> int:
     return 0
 
 
+def cmd_grade_custom() -> int:
+    """Phase 6: run every hand-authored case through the same engine and grader."""
+    from ghost.custom_cases import run_all
+    cfg = load_config()
+    llm = None
+    if cfg.has_api_key and cfg.llm_base_url:
+        from ghost.llm import LLM
+        llm = LLM()  # only called for a request text with no keyword decision and no cached label
+    results = run_all(llm, cfg.text_model)
+    print(f"{'case':<28} {'kind':<12} {'expected':<15} {'got':<15} {'steps':>9}  result")
+    for r in results:
+        g = r.grade
+        print(f"{r.name:<28} {r.kind:<12} {r.expected_status:<15} {r.got_status:<15} "
+              f"{len(set(g.expected) & set(g.got))}/{len(g.expected)}:{len(g.got):<5}  {'PASS' if r.passed else 'FAIL'}")
+    for r in results:
+        if not r.passed:
+            print(f"--- {r.name}: expected {r.expected_status}, got {r.got_status}")
+            for t in r.grade.expected:
+                if t not in r.grade.got:
+                    print(f"   expected-only {t}")
+            for t in r.grade.got:
+                if t not in r.grade.expected:
+                    print(f"   got-only      {t}")
+            print("   notes: " + " | ".join(r.notes))
+    n = sum(r.passed for r in results)
+    print(f"Custom cases: {n}/{len(results)} pass "
+          f"(custom {sum(r.passed for r in results if r.kind == 'custom')}/{sum(r.kind == 'custom' for r in results)}, "
+          f"adversarial {sum(r.passed for r in results if r.kind == 'adversarial')}/"
+          f"{sum(r.kind == 'adversarial' for r in results)})")
+    return 0 if n == len(results) else 1
+
+
 def _validate_output(data, path):
     from ghost.output import evidence_times, read_output, validate
 
@@ -553,7 +608,10 @@ def main() -> int:
     parser.add_argument("--refresh-cache", action="store_true", help="ignore LLM caches and call again")
     parser.add_argument("--usage", action="store_true", help="print the usage ledger totals")
     parser.add_argument("--audit", action="store_true", help="re-validate output.csv, harm signals, status mix")
+    parser.add_argument("--grade-custom", action="store_true", help="grade the custom and adversarial cases")
     args = parser.parse_args()
+    if args.grade_custom:
+        return cmd_grade_custom()
     if args.audit:
         return cmd_audit()
     if args.dry_run_cost:
