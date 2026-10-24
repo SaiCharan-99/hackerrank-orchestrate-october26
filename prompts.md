@@ -103,6 +103,18 @@ email_delivery_service/EMAIL_DELIVERY_LOG, legal_service/LEGAL_HOLD_RECORD).
 Add main.py --evidence <resource_id> printing all rows for a resource sorted by captured_at, and
 --coverage printing per-file row counts and per-format parse errors.
 
+Checks: --coverage parses all non-image, non-pdf files with zero errors. For every sample step
+with a non-empty evidence_id, assert the (file_id, resource_id) pair exists in the index and
+captured_at <= that case's audit_at. Print the list of sample resources with no row anywhere (these
+must come from PNG/PDF in Phase 4: expected support_001 via evidence_58 PDF, and any image-cited
+samples).
+```
+
+## Phase 2b — Account discovery
+
+```text
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+Phase 2 built the parsers and EvidenceIndex but did not build account discovery. This phase builds it.
 ACCOUNT DISCOVERY (verified finding, highest-risk part of the problem). Every canonical answer names the
 subject's account_* id, but the account row in evidence usually carries NO identifier (404 / profile
 null / absent from table), and only ~200 of 518 subjects have an account tied to them by an identifier
@@ -127,11 +139,17 @@ and print per-case candidate counts:
 Checks for discovery: --discovery prints the candidate-set size histogram over 518 and, for the 32
 samples, exact / contained / miss against the account ids in sample_output.csv. Target: all 32 contained,
 >= 28 exact, and the Diagnosis log records what each failing sample needed.
-Checks: --coverage parses all non-image, non-pdf files with zero errors. For every sample step
-with a non-empty evidence_id, assert the (file_id, resource_id) pair exists in the index and
-captured_at <= that case's audit_at. Print the list of sample resources with no row anywhere (these
-must come from PNG/PDF in Phase 4: expected support_001 via evidence_58 PDF, and any image-cited
-samples).
+Implementation notes: use EvidenceIndex.by_identifier and each row's lookup_keys for signal 1 and call
+Subject.add_resource with a source like "evidence:<file_id>" then IdentityIndex.reindex(). Also attach every
+non-account resource (search_, support_, analytics_, export_, data_flow_, backup_, audit_record_, tombstone_,
+marketing_, cache_, email_delivery_, legal_hold_) owned through an identifier, because Phase 3 needs the
+whole footprint per subject, not just the account. Keep discovery pure: it reads data + index and returns a
+Discovery result per case {subject, account_candidates, chosen_account, reason, resources}; nothing in it
+calls an LLM. Known fact to use: scoped SQL extracts (e.g. evidence_90 has snapshot_scope=account_service and
+empty tables) enumerate only the system named in snapshot_scope, so absence-by-omission applies only to that
+system there.
+Checks: python code/main.py --discovery ; paste the histogram and the 32-sample table. Also run --coverage
+again to confirm nothing regressed.
 ```
 
 ## Phase 3 — State engine + local grader
