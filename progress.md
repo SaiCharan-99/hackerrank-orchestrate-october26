@@ -23,6 +23,7 @@ Design reference: `APPROACH.md`. Output contract: `AGENTS.md` §6. Phase prompts
 | 2 | Text evidence parsers (SQL / JSON / logs / txt) | DONE | every sample finding and verification resource is found in the cited file at ≤ `audit_at` |
 | 2b | Account discovery (`discovery.py`, `--discovery`; prompts.md Phase 2 "ACCOUNT DISCOVERY") | DONE | all 32 sample accounts contained, >= 28 exact |
 | 3 | State engine + local grader | DONE | `--grade` reports 32/32 exact sample matches |
+| 3b | Discovery fix: orphan accounts, unchosen cases (prompts.md Phase 3b) | TODO | --discovery chosen=None count is 1; --grade >= 25/32 |
 | 4 | Vision extraction + intent classifier + triage | TODO | vision agreement pass clean; `NOT_APPLICABLE` set agrees with `CLASSIFY_REQUEST` activities |
 | 5 | Full run + validator | TODO | `output.csv` 518 rows, validator PASS, zero future-evidence citations |
 | 6 | Evaluation reports + custom/adversarial cases | TODO | `code/evaluation/evaluation_report.md` and `usage_report.md` filled from grader/ledger output |
@@ -244,8 +245,19 @@ policy-action linkage), `code/main.py` (`--grade`, `--analytics-hypothesis`, `--
 
 (append per tuning iteration; this is what the judges asked for)
 
+## Verifier findings after Phase 3 (2026-10-25)
+
+- Full-run invariants hold: 0 future-evidence citations, 0 COMPLETE steps without evidence, 0 INCOMPLETE
+  remediation/verification with evidence, step numbers consecutive, 3,235 steps (6.25 per case), 169 COMPLETE /
+  349 INCOMPLETE before intent classification.
+- Defect: 18 cases have no chosen account (NEAR_REPORT_MIN=90 too tight; 23 orphan account activities exist);
+  case_53 is COMPLETE with []. Fix is Phase 3b in prompts.md. 101 cases have no security-audit step, mostly
+  because their audit records never appear in participant data (e.g. audit_record_6645/5569 appear nowhere).
+- The analytics tie in case_03 (analytics_9406 vs 5589, anonymized 15 s apart, no identifiers) is informational
+  like the account ties; do not spend effort on it.
+
 ## Next step
 
-Phase 4 (Vision extraction + intent classifier + triage): vision rows for the 11 PNG + 4 PDF files must close
+Phase 3b, then Phase 4 (Vision extraction + intent classifier + triage): vision rows for the 11 PNG + 4 PDF files must close
 case_07/18/20 and be fed back into discovery (accounts for case_23/28/29, ties such as case_03); then
 `--grade` again. Paste the prompts.md "Phase 4" block.

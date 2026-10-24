@@ -175,6 +175,34 @@ needing PNG/PDF may fail until Phase 4 and must be listed explicitly. Record eve
 Diagnosis log line.
 ```
 
+## Phase 3b — Discovery fix: orphan accounts and unchosen cases (verifier finding)
+
+```text
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+Verifier diagnosis (signal -> cause -> change) to implement and record in the Diagnosis log:
+Signal: on the full 518-case run, 18 cases end with discovery.chosen_account=None (reason "every candidate taken
+by another subject; left unchosen"), so they emit no account_service verification step; case_53 is COMPLETE with
+an empty steps array. At the same time 23 deletion_worker DELETE_RECORD account activities are orphans (chosen by
+no case), e.g. account_796 2026-07-03 10:15 PARTIAL vs case_173 reported 2026-07-03 12:00 PARTIALLY_COMPLETE;
+account_445 / 6623 / 6049 on 01-20 and 01-23 vs case_497 / 494 / 496 (results match exactly).
+Cause: NEAR_REPORT_MIN=90 treats only hits within 90 min of reported_at as near; several clusters have the
+account activity 2h05-2h15 before reported_at, so the true account is filtered out, the case competes for its
+neighbours' accounts, and the one-to-one pass leaves it unchosen.
+Change, in code/ghost/discovery.py only:
+ 1. Raise NEAR_REPORT_MIN to 150 and re-check the 32-sample table (must stay 32 contained; exact must not drop
+    below 29).
+ 2. After the one-to-one assignment, run a leftover pass: for every case still unchosen, take orphan account
+    activities (DELETE_RECORD by deletion_worker or CLASSIFY_REQUEST by privacy_intake, not chosen by any case)
+    inside [requested_at, reported_at + REPORT_LAG]; prefer result-matched, then nearest to reported_at; assign
+    one-to-one across the leftover cases; mark ambiguous=True with a reason naming the orphan pool. A case is left
+    unchosen only when the pool is empty (expected: case_53, user_22, which has no account activity at all).
+ 3. Never let a case with chosen_account=None lose its footprint: the engine already emits other verifications;
+    for the residual unchosen case add a note "account unknown" so Phase 6 can list it.
+Checks: python code/main.py --discovery (histogram, sample table, and print the count of chosen=None, expected 1)
+; python code/main.py --grade (must still be 25/32 or better with the same 7 or fewer failures). Also print how
+many of the 18 previously unchosen cases now have an account and how many previously chosen accounts changed.
+```
+
 ## Phase 4 — Vision extraction, intent classifier, triage
 
 ```text
