@@ -20,7 +20,8 @@ Design reference: `APPROACH.md`. Output contract: `AGENTS.md` §6. Phase prompts
 |---|---|---|---|
 | 0 | Scaffold, loader, model probe | DONE | `python code/main.py --counts` prints table counts; `python code/tools/list_models.py` lists gateway models |
 | 1 | Identity graph | DONE | all 518 request emails resolve to a `user_id`; `--subject` prints sample subjects with account ids |
-| 2 | Text evidence parsers (SQL / JSON / logs / txt) | TODO | every sample finding and verification resource is found in the cited file at ≤ `audit_at` |
+| 2 | Text evidence parsers (SQL / JSON / logs / txt) | DONE | every sample finding and verification resource is found in the cited file at ≤ `audit_at` |
+| 2b | Account discovery (`discovery.py`, `--discovery`; prompts.md Phase 2 "ACCOUNT DISCOVERY") | TODO | all 32 sample accounts contained, >= 28 exact |
 | 3 | State engine + local grader | TODO | `--grade` reports 32/32 exact sample matches |
 | 4 | Vision extraction + intent classifier + triage | TODO | vision agreement pass clean; `NOT_APPLICABLE` set agrees with `CLASSIFY_REQUEST` activities |
 | 5 | Full run + validator | TODO | `output.csv` 518 rows, validator PASS, zero future-evidence citations |
@@ -67,6 +68,15 @@ email / hash / phone digits only. All 518 request emails resolve (418 current, 1
 0/32 sample account ids are linkable from activity (only 12 LINK_RESOURCE_IDENTITY rows, 1 account): Phase 2 input.
 Files: created `code/ghost/identity.py`; changed `code/main.py` (`--subject`, `--identity-check`).
 
+## Phase 2 summary (DONE 2026-10-24, parsers only)
+
+`code/ghost/evidence/` parses all 79 text evidence files (24 SQL, 28 JSON, 26 log, 1 txt) with zero errors into
+2,517 `EvidenceRow`s over 2,040 resources; 15 PNG/PDF deferred to Phase 4. 74/75 cited sample steps found in the
+cited file at <= audit_at (4 of them as absence-by-omission); the 1 failure is support_001 in evidence_58 (PDF).
+Account discovery (block 2b) was not in the executed prompt and is still TODO.
+Files: created `code/ghost/evidence/{__init__,base,sql,json_exports,logs,text,index}.py`; changed `code/main.py`
+(`--evidence`, `--coverage`).
+
 ## Decisions and parameters
 
 - P0: CSVs read with `dtype=str, keep_default_na=False` so empty identifiers stay `""` (never NaN) and ids are never coerced.
@@ -75,6 +85,12 @@ Files: created `code/ghost/identity.py`; changed `code/main.py` (`--subject`, `-
 - P0: role model defaults mirror `.env.example` (vision `claude-sonnet`, vision B `bedrock/qwen.qwen3-vl-235b-a22b`, text `claude-haiku`, triage `claude-sonnet`, budget $10).
 
 ## Open issues
+
+- P2: account discovery (block 2b) not built: 15 sample account/audit/support resources have no explicit row in any
+  text file (account_006/007/008/010/410/4163/4990/5037/5521/7012/8858, audit_record_5569/6645, support_001) and
+  0/32 sample accounts are linked to subjects yet. `Subject.add_resource` hook is still unused by the evidence index.
+- P2: support_001 (case_07) needs evidence_58 PDF extraction in Phase 4.
+- P2: one row stays present=None (support_7731 `thumbnail_failed`, attachment_preview service); treated as unknown.
 
 - P1: 0/32 sample account ids linkable from activity; Phase 2 evidence parsers must call `Subject.add_resource`
   with `customer_reference` / `subject_reference` / `lookup_key=user_N` matches, then `IdentityIndex.reindex()`.
@@ -88,6 +104,23 @@ Files: created `code/ghost/identity.py`; changed `code/main.py` (`--subject`, `-
 
 - P0: first cold `--counts` run took 5.4 s (pandas import cold cache); warm runs 1.6 s. Not a blocker.
 
+## Decisions and parameters (P2)
+
+- P2: system_id comes from the resource-id prefix table in `base.py` (`SYSTEMS`); category from the collection/table
+  name (`COLLECTION_CATEGORY`) or the ledger `record_type`, else the prefix default.
+- P2: `EvidenceRow` adds `file_captured_at` (manifest time, used for the `<= audit_at` citation cut-off; `captured_at`
+  is the in-file observation time), `lookup_keys` (what was searched: lookup_key/query/correlation_key/subject_ref,
+  = ownership not content), `fmt`. `identifiers` holds only record content; `matched_value` of a PII scan counts as content.
+- P2: absence by omission: a SQL table or a snapshot-bundle collection enumerates its system, so a resource not listed
+  there is ABSENT in that file (`EvidenceIndex.absent_by_omission`, `omission_files`). Needed for case_01/02/04
+  (evidence_54) and case_31 (evidence_51). Scoped extracts: Phase 3 must tie the file to the subject before using it.
+- P2: SQL replicas: one merged row per (file, resource); `flags.topology` lists topologies holding it, `flags.drift`
+  + `missing_in` when absent from another topology; non-null identifiers from any topology win (exposed anywhere = exposed).
+- P2: logs: `*_started` lines' lookup keys join to the result line by trace id; lines with the same (trace, resource)
+  merge into one row; noise services ignored; `*_read_completed/_query_completed/_loaded` with no negative signal = present.
+- P2: ledger results: FOUND/IDENTIFIABLE/ANONYMIZED/REDACTED/ACTIVE/DISABLED/BLOCKED = present, NOT_FOUND = absent;
+  ACTIVE sets enabled (DATA_FLOW) or restore_allowed (BACKUP).
+
 ## Decisions and parameters (P1)
 
 - P1: resolution requires a unique owner; an identifier shared by >1 user returns None (0 such emails today).
@@ -98,9 +131,16 @@ Files: created `code/ghost/identity.py`; changed `code/main.py` (`--subject`, `-
 ## Diagnosis log (signal → cause → change)
 
 - P1: none (no fixes; all checks matched first run).
+- P2: 5 cited sample steps "no row" (account_001/002/004 in evidence_54, account_4857 in evidence_51) -> the cited
+  files prove absence by omitting the account from a full table/collection -> added parser scopes + `absent_by_omission`.
+- P2: pipe-dialect rows had trace=service and no state -> lines start with "| LEVEL |", leading pipe gave an empty
+  first field -> strip leading "| " before splitting.
+- P2: 74 log rows with present=None (analytics/support reads, legal `retained_order_loaded`) -> completed reads carry no
+  http_status/rows -> treat `*_read_completed/_query_completed/_loaded` with no negative signal as present.
 
 (append per tuning iteration; this is what the judges asked for)
 
 ## Next step
 
-Phase 2 (Text evidence parsers): feed account/resource links into `Subject.add_resource`.
+Phase 2b (Account discovery): implement `code/ghost/discovery.py` + `--discovery` per the ACCOUNT DISCOVERY
+block in prompts.md Phase 2, using `EvidenceIndex.by_identifier` / `lookup_keys` for signal 1. Then Phase 3.

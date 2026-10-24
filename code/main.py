@@ -3,6 +3,8 @@
 Usage:  python code/main.py --counts
         python code/main.py --subject <email>
         python code/main.py --identity-check
+        python code/main.py --evidence <resource_id>
+        python code/main.py --coverage
 """
 from __future__ import annotations
 
@@ -101,11 +103,82 @@ def cmd_identity_check() -> int:
     return 0 if not unresolved else 1
 
 
+def cmd_evidence(resource_id: str) -> int:
+    from ghost.evidence import build_evidence_index
+
+    index = build_evidence_index(load_all(DATASET_DIR))
+    rows = index.rows_for(resource_id)
+    print(f"{resource_id}: {len(rows)} rows")
+    for r in rows:
+        flags = {k: v for k, v in r.flags.items() if v is not None}
+        ids = {k: v for k, v in r.identifiers.items() if v}
+        print(f"  {r.file_id:<12} file@{r.file_captured_at:%Y-%m-%dT%H:%M:%SZ} obs@{r.captured_at:%Y-%m-%dT%H:%M:%SZ} "
+              f"{r.fmt:<22} {r.system_id}/{r.category} present={r.present}")
+        print(f"      ids={ids} lookup={r.lookup_keys} flags={flags} at {r.pointer}")
+    return 0 if rows else 1
+
+
+def cmd_coverage() -> int:
+    """Per-file row counts, per-format parse errors, and the sample citation check."""
+    import json
+    from collections import Counter
+
+    from ghost.evidence import build_evidence_index
+
+    data = load_all(DATASET_DIR)
+    index = build_evidence_index(data)
+    manifest = data.evidence_manifest.set_index("file_id")
+    print("Per-file rows")
+    for fid in sorted(index.file_formats):
+        n = len(index.by_file.get(fid, []))
+        state = "deferred (Phase 4)" if fid in index.deferred else index.errors.get(fid, "ok")
+        print(f"  {fid:<12} {index.file_formats[fid]:<6} {n:>4}  {manifest.loc[fid, 'file_path']:<62} {state}")
+    errs = Counter(index.file_formats[f] for f in index.errors)
+    fmts = Counter(index.file_formats.values())
+    print("Per-format files / parse errors")
+    for fmt in sorted(fmts):
+        print(f"  {fmt:<6} files={fmts[fmt]:>3} errors={errs.get(fmt, 0)}")
+    print(f"Total rows: {len(index.rows)}  distinct resources: {len(index.by_resource)}")
+
+    audit = dict(zip(data.sample_requests["case_id"], data.sample_requests["audit_at"]))
+    cited_ok, cited_bad, nowhere, omitted = 0, [], set(), 0
+    for r in data.sample_output.itertuples(index=False):
+        for st in json.loads(r.steps_json or "[]"):
+            rid, eid = st["resource_id"], st["evidence_id"]
+            if not index.by_resource.get(rid):
+                nowhere.add((rid, eid or "-", r.case_id))
+            if not eid:
+                continue
+            hit = [x for x in index.by_file.get(eid, []) if x.resource_id == rid]
+            if not hit and st["state"] == "ABSENT" and index.absent_by_omission(eid, rid):
+                hit, omitted = ["absent by omission"], omitted + 1
+            fca = manifest.loc[eid, "captured_at"] if eid in manifest.index else None
+            if hit and fca is not None and fca <= audit[r.case_id]:
+                cited_ok += 1
+            else:
+                why = "deferred image/pdf" if eid in index.deferred else "no row" if not hit else "after audit_at"
+                cited_bad.append((r.case_id, st["step_no"], eid, rid, why))
+    print(f"Sample cited steps: ok={cited_ok} (absent-by-omission {omitted}) failing={len(cited_bad)}")
+    for c in cited_bad:
+        print(f"  FAIL {c[0]} step {c[1]}: {c[2]} / {c[3]} ({c[4]})")
+    print(f"Sample resources with no explicit row in any text file: {len(nowhere)}")
+    for rid, eid, case in sorted(nowhere):
+        how = ("absent by omission" if eid != "-" and index.absent_by_omission(eid, rid)
+               else "Phase 4 image/pdf" if eid in index.deferred
+               else "uncited (needs discovery link)" if eid == "-" else "?")
+        print(f"  {rid:<20} cited={eid:<12} {case:<8} [{index.file_formats.get(eid, '-')}] {how}")
+    text_errors = [f for f in index.errors if f not in index.deferred]
+    unexpected = [c for c in cited_bad if c[4] != "deferred image/pdf"]
+    return 0 if not text_errors and not unexpected else 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Ghost Data Still Exists deletion-audit agent")
     parser.add_argument("--counts", action="store_true", help="print dataset table counts")
     parser.add_argument("--subject", metavar="EMAIL", help="print the resolved subject for an email")
     parser.add_argument("--identity-check", action="store_true", help="Phase 1 identity checks")
+    parser.add_argument("--evidence", metavar="RESOURCE_ID", help="print all evidence rows for a resource")
+    parser.add_argument("--coverage", action="store_true", help="Phase 2 parser coverage and sample citation check")
     args = parser.parse_args()
     if args.counts:
         return cmd_counts()
@@ -113,6 +186,10 @@ def main() -> int:
         return cmd_subject(args.subject)
     if args.identity_check:
         return cmd_identity_check()
+    if args.evidence:
+        return cmd_evidence(args.evidence)
+    if args.coverage:
+        return cmd_coverage()
     parser.print_help()
     return 0
 

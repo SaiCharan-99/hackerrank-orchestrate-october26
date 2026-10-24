@@ -101,3 +101,59 @@ branch=main
 repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-24T20:25:01Z] SESSION START
+
+tool=Claude Code
+model=claude-opus-5-5
+Repo Root: C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+Branch: main
+Worktree: main
+Parent Agent: none
+Language: py
+Time Remaining: not configured
+
+## [2026-10-24T20:33:02Z] Phase 2: text evidence parsers, EvidenceIndex, --evidence and --coverage
+
+User Prompt (verbatim, secrets redacted):
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model= values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two entries of log.txt, and the section of prompts.md for this phase only. [...same session protocol as earlier phase prompts...] (4) End with a 3-line hand-off for the next session: what is DONE, what is open, which phase block to paste next.
+Implement code/ghost/evidence/ with base.py (EvidenceRow pydantic model [...]), and one module per format: sql.py, json_exports.py, logs.py, text.py; index.py builds EvidenceIndex [...] latest_at(resource_id, audit_at). System/category mapping lives in one table in base.py [...]. Add main.py --evidence <resource_id> [...] and --coverage [...]. Checks: --coverage parses all non-image, non-pdf files with zero errors. For every sample step with a non-empty evidence_id, assert the (file_id, resource_id) pair exists in the index and captured_at <= that case's audit_at. Print the list of sample resources with no row anywhere [...].
+
+Agent Response Summary:
+Built code/ghost/evidence/ (base schema + mapping table, SQL/JSON/log/text parsers, EvidenceIndex with by_resource/by_identifier/by_file, latest_at, absence-by-omission) and the --evidence / --coverage CLI. All 79 text evidence files parse with zero errors (2,517 rows, 2,040 resources); 74/75 cited sample steps are found in the cited file at or before audit_at, the only failure being support_001 in the evidence_58 PDF (Phase 4). The account-discovery block in prompts.md was not part of the executed prompt and is recorded as Phase 2b TODO.
+
+Actions:
+* Created code/ghost/evidence/__init__.py, base.py, sql.py, json_exports.py, logs.py, text.py, index.py
+* Edited code/main.py (--evidence, --coverage); edited progress.md
+* Ran python code/main.py --coverage; --evidence account_005 / support_002 / data_flow_006 / account_4857; --identity-check
+
+Diagnosis: 5 cited sample steps had no row (account_001/002/004 in evidence_54, account_4857 in evidence_51) -> those files prove absence by omitting the account from a full table/collection -> added parser scopes and EvidenceIndex.absent_by_omission.
+Diagnosis: pipe-dialect rows had trace=service and no state -> lines begin with "| LEVEL |" so split gave an empty first field -> strip the leading pipe before splitting.
+Diagnosis: 74 log rows had present=None -> completed reads carry no http_status/rows -> treat *_read_completed/_query_completed/_loaded with no negative signal as present.
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=main
+repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
+
+## [2026-10-24T20:34:06Z] Commit Phase 2 changes
+
+User Prompt (verbatim, secrets redacted):
+Commit the working tree changes with a sensible message.
+
+Agent Response Summary:
+Committed the Phase 2 evidence package, main.py CLI flags, progress.md and log.txt on main. Not pushed.
+
+Actions:
+* git add + git commit
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=main
+repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
