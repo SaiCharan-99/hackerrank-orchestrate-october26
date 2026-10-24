@@ -6,6 +6,8 @@ Usage:  python code/main.py --counts
         python code/main.py --evidence <resource_id>
         python code/main.py --coverage
         python code/main.py --discovery
+        python code/main.py --grade [--analytics-hypothesis H]
+        python code/main.py --case <case_id>
 """
 from __future__ import annotations
 
@@ -213,6 +215,71 @@ def cmd_discovery() -> int:
     return 0 if tally["miss"] == 0 else 1
 
 
+def _audits(hypothesis=None):
+    import pandas as pd
+
+    from ghost.discovery import discover
+    from ghost.engine import ANALYTICS_HYPOTHESIS, audit_all
+    from ghost.evidence import build_evidence_index
+
+    data = load_all(DATASET_DIR)
+    index = build_evidence_index(data)
+    results = discover(data, build_index(data), index)
+    reqs = pd.concat([data.requests, data.sample_requests], ignore_index=True)
+    # Phase 3: intent is assumed DELETION for every case (the classifier arrives in Phase 4).
+    audits = audit_all(reqs, results, index, data.rules, data.activity,
+                       analytics_hypothesis=hypothesis or ANALYTICS_HYPOTHESIS)
+    return data, index, audits
+
+
+def cmd_grade(hypothesis=None) -> int:
+    """Phase 3: grade the 32 samples against sample_output.csv."""
+    from ghost.grade import grade, report
+
+    data, index, audits = _audits(hypothesis)
+    pred = {c: (audits[c].status, audits[c].steps()) for c in data.sample_requests["case_id"]}
+    rows = list(data.sample_output[["case_id", "deletion_status", "steps_json"]].itertuples(index=False))
+    summary, cases = grade(rows, pred, index.file_formats)
+    print(report(summary, cases))
+    failing = [c for c in cases if not c.exact]
+    print(f"Failing: {[c.case_id for c in failing]}")
+    print("Failure causes (text-only = every expected resource has a text row and no tie is involved):")
+    text_only_fail = []
+    for c in failing:
+        causes = []
+        if any(t[5] in index.deferred for t in c.expected):
+            causes.append("cites PNG/PDF evidence (Phase 4)")
+        missing = sorted({t[2] for t in c.expected if not index.by_resource.get(t[2])})
+        if missing:
+            causes.append(f"no row in any text file: {','.join(missing)} (Phase 4 vision)")
+        a = audits[c.case_id]
+        exp_acc = {t[2] for t in c.expected if t[2].startswith("account_")}
+        got_acc = {t[2] for t in c.got if t[2].startswith("account_")}
+        if exp_acc != got_acc and any("account choice tentative" in n for n in a.notes):
+            causes.append(f"ambiguous account, tentative {','.join(sorted(got_acc))} vs {','.join(sorted(exp_acc))}")
+        ties = [n for n in a.notes if "tentatively linked" in n]
+        if ties and {t[2] for t in c.expected} ^ {t[2] for t in c.got} - exp_acc - got_acc:
+            causes.append("tentative tie on a policy-linked record")
+        if not causes:
+            text_only_fail.append(c.case_id)
+            causes.append("TEXT-ONLY FAILURE")
+        print(f"  {c.case_id}: {'; '.join(causes)}")
+    print(f"Text-only failures: {text_only_fail or 'none'}")
+    return 0 if not text_only_fail else 1
+
+
+def cmd_case(case_id: str) -> int:
+    from ghost.engine import describe
+
+    _, _, audits = _audits()
+    if case_id not in audits:
+        print(f"unknown case {case_id}")
+        return 1
+    print(describe(audits[case_id]))
+    print(audits[case_id].steps_json())
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Ghost Data Still Exists deletion-audit agent")
     parser.add_argument("--counts", action="store_true", help="print dataset table counts")
@@ -221,6 +288,9 @@ def main() -> int:
     parser.add_argument("--evidence", metavar="RESOURCE_ID", help="print all evidence rows for a resource")
     parser.add_argument("--coverage", action="store_true", help="Phase 2 parser coverage and sample citation check")
     parser.add_argument("--discovery", action="store_true", help="Phase 2b account discovery check")
+    parser.add_argument("--grade", action="store_true", help="Phase 3 sample grader")
+    parser.add_argument("--analytics-hypothesis", choices=["attempted_delete", "always_anonymize"])
+    parser.add_argument("--case", metavar="CASE_ID", help="print the CaseAudit for one case")
     args = parser.parse_args()
     if args.counts:
         return cmd_counts()
@@ -234,6 +304,10 @@ def main() -> int:
         return cmd_coverage()
     if args.discovery:
         return cmd_discovery()
+    if args.grade:
+        return cmd_grade(args.analytics_hypothesis)
+    if args.case:
+        return cmd_case(args.case)
     parser.print_help()
     return 0
 

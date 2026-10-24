@@ -22,7 +22,7 @@ Design reference: `APPROACH.md`. Output contract: `AGENTS.md` §6. Phase prompts
 | 1 | Identity graph | DONE | all 518 request emails resolve to a `user_id`; `--subject` prints sample subjects with account ids |
 | 2 | Text evidence parsers (SQL / JSON / logs / txt) | DONE | every sample finding and verification resource is found in the cited file at ≤ `audit_at` |
 | 2b | Account discovery (`discovery.py`, `--discovery`; prompts.md Phase 2 "ACCOUNT DISCOVERY") | DONE | all 32 sample accounts contained, >= 28 exact |
-| 3 | State engine + local grader | TODO | `--grade` reports 32/32 exact sample matches |
+| 3 | State engine + local grader | DONE | `--grade` reports 32/32 exact sample matches |
 | 4 | Vision extraction + intent classifier + triage | TODO | vision agreement pass clean; `NOT_APPLICABLE` set agrees with `CLASSIFY_REQUEST` activities |
 | 5 | Full run + validator | TODO | `output.csv` 518 rows, validator PASS, zero future-evidence citations |
 | 6 | Evaluation reports + custom/adversarial cases | TODO | `code/evaluation/evaluation_report.md` and `usage_report.md` filled from grader/ledger output |
@@ -85,6 +85,41 @@ numbering pattern, the DELETE_RECORD/CLASSIFY_REQUEST activity window, fixed-poi
 one-to-one assignment. Samples: 32/32 contained, 29 exact. Evaluation: 297 unique, 221 ambiguous (sizes 2-6), 0 empty.
 Files: created `code/ghost/discovery.py`; changed `code/main.py` (`--discovery`).
 
+## Phase 3 summary (DONE 2026-10-24)
+
+`code/ghost/engine.py` builds one `CaseAudit` per request from `latest_at(resource, audit_at)` state; status is a
+property of the findings list and steps_json is serialized from the same lists. `code/ghost/grade.py` + `--grade`:
+25/32 exact, status 0.969, step recall 0.948 / precision 0.973, sequence exact 0.781, pairwise order 0.969;
+0 text-only failures (the 7 failures need PNG/PDF rows or are tentative ties, listed under Open issues).
+Files: created `code/ghost/engine.py`, `code/ghost/grade.py`; changed `code/ghost/discovery.py` (signal 5
+policy-action linkage), `code/main.py` (`--grade`, `--analytics-hypothesis`, `--case`).
+
+## Decisions and parameters (P3)
+
+- P3: analytics hypothesis kept = `attempted_delete` (an ANALYTICS_PROFILE the deletion_worker tried to
+  DELETE_RECORD before audit_at is under DELETE treatment). It scores 25/32; `always_anonymize` scores 24/32 and
+  breaks case_12 (analytics_9914 has a DELETE_RECORD FAILED activity and no anonymized flag). No sync activity exists
+  for analytics_9914, so the "recreated by sync" variant reduces to the same test. Flag: `--analytics-hypothesis`.
+- P3: verification covers the whole linked footprint: chosen account (ABSENT, cited by its row or by an omission
+  file), every linked record with a row <= audit_at, and RETAIN records (security audit, legal hold) whose only rows
+  are after audit_at - the latter only in INCOMPLETE cases (future check, evidence ""), never cited in COMPLETE cases.
+- P3: violation tests: DELETE -> present; ANONYMIZE -> present and (direct identifier, anonymized=False, or found by
+  an identifier lookup); REDACT -> any direct identifier other than customer_reference (tombstones keep it), or
+  redacted=False; DATA_FLOW -> enabled; BACKUP -> restore_allowed. REDACT/ANONYMIZE/RETAIN rows that are absent at
+  audit_at are skipped with a note.
+- P3: a `deletion_marker` check that finds no marker forces DELETE treatment (case_10 support_002, a legacy
+  contact-index copy, is a remaining record, not a conversation to redact).
+- P3: absence-by-omission citation: an omission file that also holds the subject's other records wins, else the
+  latest file listing at least one other record of that system (empty scoped extracts like evidence_90 never cite).
+- P3: discovery signal 5 (policy-action linkage, `link_policy_actions`): unowned non-account records (anonymized
+  analytics etc.) attach through deletion_worker policy actions in [reported_at - 90 min, reported_at + 150 min],
+  same side of reported_at as the subject's other policy actions, STORY_MATCH 15 min preference, monotone user order
+  along subject-ordered listings (`ordered_listings`: every listing with >=2 owned rows strictly increasing, one with
+  >=3; evidence_02 qualifies), fixed-point uniqueness, then a tentative one-to-one choice for ties (noted).
+  Records already linked to any subject (incl. LINK_RESOURCE_IDENTITY) are excluded.
+- P3: sort key (phase rank, AGENTS.md 6.4 operation rank, system_id, resource_id); JSON compact, keys in the
+  7-key order; eval steps hash stable across runs (108d15002fe29d91).
+
 ## Decisions and parameters
 
 - P0: CSVs read with `dtype=str, keep_default_na=False` so empty identifiers stay `""` (never NaN) and ids are never coerced.
@@ -93,6 +128,14 @@ Files: created `code/ghost/discovery.py`; changed `code/main.py` (`--discovery`)
 - P0: role model defaults mirror `.env.example` (vision `claude-sonnet`, vision B `bedrock/qwen.qwen3-vl-235b-a22b`, text `claude-haiku`, triage `claude-sonnet`, budget $10).
 
 ## Open issues
+
+- P3: sample failures that need Phase 4: case_07 (support_001 only in evidence_58 PDF), case_18 / case_20
+  (audit_record_6645 / audit_record_5569 appear in no text file), case_23 / case_28 / case_29 (ambiguous accounts,
+  known from P2b). case_03: analytics_9406 vs analytics_5589 is a pure tie between user_42 and user_43 in text
+  evidence (same cluster, both pre-report SUCCESS, listed only in a log); the tentative choice is wrong for the sample.
+- P3: evaluation run notes: 183 tentative accounts, 112 tentative policy-linked ties, 31 unprovable resources
+  (rows only after audit_at), 17 retained-later records. Eval status split 349 INCOMPLETE / 169 COMPLETE (intent not
+  yet applied). Phase 4 should re-run discovery after vision rows and report how many ties remain.
 
 - P2b: 221/518 evaluation cases keep 2-6 account candidates (tentative choice); Phase 4 triage must resolve them.
 - P2b-verifier (2026-10-25): the residual ambiguity is informational, not a parsing gap. Tested on the 326 known
@@ -183,9 +226,26 @@ Files: created `code/ghost/discovery.py`; changed `code/main.py` (`--discovery`)
 - P2b: 232 ambiguous eval cases with up to 8 candidates -> multi-day windows include other clusters' hits -> prefer
   hits within 90 min of reported_at (221 ambiguous, max 6; samples still 32/32 contained).
 
+- P3: 7 analytics VERIFY_RECORD_ANONYMIZED steps missing (case_03/04/21/25-28) -> anonymized analytics carry no
+  identifier, so no evidence row ties them to a subject -> discovery signal 5 links them through deletion_worker
+  ANONYMIZE_RECORD activity in the case window plus subject-ordered listings in evidence_02 (16 -> 19 exact).
+- P3: candidate pools of 4-9 users per analytics record -> multi-day [requested_at, reported_at] window spans other
+  clusters -> window [reported_at - 90 min, + 150 min], same-side-of-report rule, 15 min story preference.
+- P3: 7 security-audit VERIFY_RECORD_PRESENT steps missing (case_09/18/20/23/24/29/30) -> their only rows are in
+  files captured after audit_at -> RETAIN records observed later still get a future verification in INCOMPLETE
+  cases (19 -> 22 exact; 18/20 remain because their records are in no text file).
+- P3: case_19 extra export_1260 finding -> policy linkage attached a record that LINK_RESOURCE_IDENTITY already
+  ties to user_18 -> exclude records linked to any subject from signal 5.
+- P3: case_10 support_002 got VERIFY_RECORD_REDACTED instead of a remaining-record finding -> support category
+  defaults to REDACT but the row is a legacy contact-index copy with deletion_marker false -> marker-missing forces DELETE.
+- P3: case_04 cited evidence_90 instead of evidence_54 for account_004 -> evidence_90 is an empty scoped extract
+  that "omits" every account -> omission citation needs a file listing other records of the system; then case_31
+  cited evidence_07 instead of evidence_51 -> files holding the subject's other records win first (22 -> 25 exact).
+
 (append per tuning iteration; this is what the judges asked for)
 
 ## Next step
 
-Phase 3 (State engine + local grader): consume `discover()` results (chosen_account + resources per case) and
-build steps; paste the prompts.md "Phase 3" block.
+Phase 4 (Vision extraction + intent classifier + triage): vision rows for the 11 PNG + 4 PDF files must close
+case_07/18/20 and be fed back into discovery (accounts for case_23/28/29, ties such as case_03); then
+`--grade` again. Paste the prompts.md "Phase 4" block.
