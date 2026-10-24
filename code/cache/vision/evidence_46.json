@@ -1,0 +1,41 @@
+{
+  "agreement": true,
+  "detail_panel": {
+    "Checksum": "e71b6d...",
+    "Content type": "application/pdf",
+    "Encryption": "AES-256",
+    "Modified": "12 Feb 2026 18:42 UTC",
+    "Size": "684 KB",
+    "Uploader": "support-service",
+    "Version": "v3"
+  },
+  "disagreements": [],
+  "error": "",
+  "fallback_used": "",
+  "file_id": "evidence_46",
+  "models": [
+    "claude-sonnet",
+    "bedrock/qwen.qwen3-vl-235b-a22b"
+  ],
+  "raw": {
+    "model_a": {
+      "detail_panel": {
+        "Checksum": "e71b6d...",
+        "Content type": "application/pdf",
+        "Encryption": "AES-256",
+        "Modified": "12 Feb 2026 18:42 UTC",
+        "Size": "684 KB",
+        "Uploader": "support-service",
+        "Version": "v3"
+      },
+      "rows": []
+    },
+    "model_b": {
+      "detail_panel": {},
+      "rows": []
+    },
+    "source": "image"
+  },
+  "rows": [],
+  "version": 2
+}

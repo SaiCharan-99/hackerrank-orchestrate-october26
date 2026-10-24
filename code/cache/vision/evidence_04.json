@@ -1,0 +1,157 @@
+{
+  "agreement": false,
+  "detail_panel": {
+    "Default address": "2-18-4 Kichijoji, Musashino, Tokyo 180-0004",
+    "Loyalty tier": "Silver",
+    "Member since": "12 Jan 2024",
+    "Support": "CS-8538 \u00b7 support_9538"
+  },
+  "disagreements": [
+    "account_5762: only in A",
+    "support_9538: only in A"
+  ],
+  "error": "",
+  "fallback_used": "third_pass",
+  "file_id": "evidence_04",
+  "models": [
+    "claude-sonnet",
+    "bedrock/qwen.qwen3-vl-235b-a22b"
+  ],
+  "raw": {
+    "model_a": {
+      "detail_panel": {
+        "Default address": "2-18-4 Kichijoji, Musashino, Tokyo 180-0004",
+        "Loyalty tier": "Silver",
+        "Member since": "12 Jan 2024",
+        "Support": "CS-8538 \u00b7 support_9538"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "USER_PROFILE",
+          "customer_reference": "user_11",
+          "email": "haruka.s1838@zoho.com",
+          "email_hash": null,
+          "enabled": null,
+          "name": "Haruka Sato",
+          "observed_at": null,
+          "phone": "+81 90 7610 2507",
+          "pointer": "header",
+          "present": true,
+          "redacted": null,
+          "resource_id": "account_5762",
+          "restore_allowed": null,
+          "status_text": ""
+        },
+        {
+          "anonymized": null,
+          "category": "SUPPORT_MESSAGE",
+          "customer_reference": null,
+          "email": "haruka.s1838@zoho.com",
+          "email_hash": null,
+          "enabled": null,
+          "name": "Haruka Sato",
+          "observed_at": null,
+          "phone": "+81 90 7610 2507",
+          "pointer": "detail panel; activity timeline",
+          "present": true,
+          "redacted": null,
+          "resource_id": "support_9538",
+          "restore_allowed": null,
+          "status_text": "created"
+        }
+      ]
+    },
+    "model_b": {
+      "detail_panel": {
+        "Default address": "2-18-4 Kichijoji, Musashino, Tokyo 180-0004",
+        "Loyalty tier": "Silver",
+        "Member since": "12 Jan 2024",
+        "Support": "CS-8538 - support_9538"
+      },
+      "rows": []
+    },
+    "reconciled": {
+      "detail_panel": {
+        "Default address": "2-18-4 Kichijoji, Musashino, Tokyo 180-0004",
+        "Loyalty tier": "Silver",
+        "Member since": "12 Jan 2024",
+        "Support": "CS-8538 \u00b7 support_9538"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "USER_PROFILE",
+          "customer_reference": "user_11",
+          "email": "haruka.s1838@zoho.com",
+          "email_hash": null,
+          "enabled": null,
+          "name": "Haruka Sato",
+          "observed_at": null,
+          "phone": "+81 90 7610 2507",
+          "pointer": "header",
+          "present": true,
+          "redacted": null,
+          "resource_id": "account_5762",
+          "restore_allowed": null,
+          "status_text": ""
+        },
+        {
+          "anonymized": null,
+          "category": "SUPPORT_MESSAGE",
+          "customer_reference": null,
+          "email": "haruka.s1838@zoho.com",
+          "email_hash": null,
+          "enabled": null,
+          "name": "Haruka Sato",
+          "observed_at": null,
+          "phone": "+81 90 7610 2507",
+          "pointer": "detail panel; activity timeline",
+          "present": true,
+          "redacted": null,
+          "resource_id": "support_9538",
+          "restore_allowed": null,
+          "status_text": "created"
+        }
+      ]
+    },
+    "source": "image"
+  },
+  "rows": [
+    {
+      "anonymized": null,
+      "category": "USER_PROFILE",
+      "customer_reference": "user_11",
+      "email": "haruka.s1838@zoho.com",
+      "email_hash": null,
+      "enabled": null,
+      "name": "Haruka Sato",
+      "observed_at": null,
+      "phone": "+81 90 7610 2507",
+      "pointer": "header",
+      "present": true,
+      "redacted": null,
+      "resource_id": "account_5762",
+      "restore_allowed": null,
+      "status_text": ""
+    },
+    {
+      "anonymized": null,
+      "category": "SUPPORT_MESSAGE",
+      "customer_reference": null,
+      "email": "haruka.s1838@zoho.com",
+      "email_hash": null,
+      "enabled": null,
+      "name": "Haruka Sato",
+      "observed_at": null,
+      "phone": "+81 90 7610 2507",
+      "pointer": "detail panel; activity timeline",
+      "present": true,
+      "redacted": null,
+      "resource_id": "support_9538",
+      "restore_allowed": null,
+      "status_text": "created"
+    }
+  ],
+  "version": 2
+}

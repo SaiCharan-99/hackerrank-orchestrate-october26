@@ -1,0 +1,25 @@
+{
+  "agreement": true,
+  "detail_panel": {},
+  "disagreements": [],
+  "error": "",
+  "fallback_used": "pdf_text",
+  "file_id": "evidence_18",
+  "models": [
+    "claude-sonnet",
+    "bedrock/qwen.qwen3-vl-235b-a22b"
+  ],
+  "raw": {
+    "model_a": {
+      "detail_panel": {},
+      "rows": []
+    },
+    "model_b": {
+      "detail_panel": {},
+      "rows": []
+    },
+    "source": "pdf_text"
+  },
+  "rows": [],
+  "version": 2
+}

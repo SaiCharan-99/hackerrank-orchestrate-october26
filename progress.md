@@ -24,7 +24,7 @@ Design reference: `APPROACH.md`. Output contract: `AGENTS.md` §6. Phase prompts
 | 2b | Account discovery (`discovery.py`, `--discovery`; prompts.md Phase 2 "ACCOUNT DISCOVERY") | DONE | all 32 sample accounts contained, >= 28 exact |
 | 3 | State engine + local grader | DONE | `--grade` reports 32/32 exact sample matches |
 | 3b | Discovery fix: orphan accounts, unchosen cases (prompts.md Phase 3b) | DONE | --discovery chosen=None count is 1; --grade >= 25/32 |
-| 4 | Vision extraction + intent classifier + triage | TODO | vision agreement pass clean; `NOT_APPLICABLE` set agrees with `CLASSIFY_REQUEST` activities |
+| 4 | Vision extraction + intent classifier + triage | DONE | vision agreement pass clean; `NOT_APPLICABLE` set agrees with `CLASSIFY_REQUEST` activities |
 | 5 | Full run + validator | TODO | `output.csv` 518 rows, validator PASS, zero future-evidence citations |
 | 6 | Evaluation reports + custom/adversarial cases | TODO | `code/evaluation/evaluation_report.md` and `usage_report.md` filled from grader/ledger output |
 | 7 | README, interview checklist, code.zip | TODO | zip = `README.md` + `code/`, no dataset/.env/log; clean run from a fresh unzip |
@@ -103,6 +103,38 @@ unknown"); 17/18 previously unchosen now have an account; 6 previously chosen ac
 287/493/506). Samples still 32 contained / 29 exact; --grade 25/32 with the same 7 failures.
 Files: changed `code/ghost/discovery.py`, `code/ghost/engine.py` (account-unknown note), `code/main.py` (chosen=None count).
 
+## Phase 4 summary (DONE 2026-10-24)
+
+`llm.py` (retry/backoff, usage ledger, budget guard, pydantic re-ask), vision/PDF extraction (15 files, Sonnet + Qwen3-VL,
+third pass on 7 disagreements, 26 rows after merge), intent classifier (454 keyword / 96 model; 10 NOT_APPLICABLE, 0
+disagreements with the 10 CLASSIFY_REQUEST activities) and bounded triage (0 candidate rows in this dataset). --grade 26/32
+(case_07 closed); vision rows resolved 0 ambiguous accounts. Ledger: 182 calls, 245,695 in / 50,875 out tokens, est. $0.97.
+Files: created `code/ghost/llm.py`, `code/ghost/intent.py`, `code/ghost/triage.py`, `code/ghost/evidence/vision.py`,
+`code/ghost/prompts/{vision,intent,triage}.py`, caches `code/cache/{intent.json,triage.json,usage_log.jsonl,vision/*.json}`;
+changed `code/main.py` (`--dry-run-cost --extract-vision --classify-intent --triage --refresh-cache --usage`; `_audits`,
+`--discovery`, `--coverage`, `--evidence` now use text + cached vision rows, intents and triage).
+
+## Decisions and parameters (P4)
+
+- P4: gateway calls never send temperature; images only via responses.create (input_text + input_image data URL); text via
+  chat.completions. Retry 429/5xx/connection, backoff 2s doubling, max 5. Other 4xx -> ExtractionFailed. An empty first
+  reply is re-asked fresh (an empty assistant turn is a Bedrock 400).
+- P4: budget guard = cumulative ledger cost >= LLM_BUDGET_USD. Prices in `llm.PRICES` are estimates (USD/1M in,out:
+  sonnet 3/15, haiku 1/5, qwen3-vl 0.53/2.66), override with LLM_PRICES_JSON. Phase 6 should confirm against gateway pricing.
+- P4: schema retries: failing top-level fields only, merged into the previous object, max 2, then extraction_failed.
+- P4: PDFs: all 4 have a text layer (PyPDF2; pypdf not installed, import falls back), so they go through the same
+  extraction prompt as text with A/B agreement; no rasterisation path (text-empty PDF -> extraction_failed, no rows).
+- P4: vision rows: one row per resource_id (repeated rows merged, non-null wins, SUPPORT_ATTACHMENT beats SUPPORT_MESSAGE);
+  present=None -> True (shown on screen); captured_at = shown timestamp else manifest time; file_captured_at = manifest
+  time; no scope (no absence-by-omission from screenshots). Category from the model (validated enum) else prefix default.
+- P4: diff ignores names; compares ids, present, email, phone, customer_reference, hash, flags. Third pass = model A with
+  both transcriptions and the diff. Agreement rate is per file (8/15 after refresh).
+- P4: intent pre-filter: ASCII text + strong deletion phrase + no negative cue (don't/do not/keep/leave/still use/copy of/
+  download/marketing/only/whether/?...) -> deletion without a call. Prompt counts verify/finish/clean-up follow-ups on
+  the person's own deletion as deletion (all 32 samples authorize deletion). Missing label -> deletion + note (fallback).
+- P4: triage candidates = rows <= audit_at outside the footprint whose identifiers resolve to the subject and another
+  subject (contested) or match only by name; accounts/analytics excluded by design. Dataset has 0 such rows, so 0 calls.
+
 ## Decisions and parameters (P3b)
 
 - P3b: NEAR_REPORT_MIN=150 (clusters with account activity 2h05-2h15 before reported_at). Ambiguous eval cases 221 -> 224.
@@ -144,6 +176,15 @@ Files: changed `code/ghost/discovery.py`, `code/ghost/engine.py` (account-unknow
 - P0: role model defaults mirror `.env.example` (vision `claude-sonnet`, vision B `bedrock/qwen.qwen3-vl-235b-a22b`, text `claude-haiku`, triage `claude-sonnet`, budget $10).
 
 ## Open issues
+
+- P4: vision rows resolved 0 of 235 ambiguous accounts (screenshots show story users already owned by text evidence).
+  Remaining sample failures are only the documented ties (case_03 analytics, case_23/28/29 accounts) and
+  audit_record_6645 / 5569 (case_18 / case_20), which appear in no participant file (grep over dataset/ and vision cache).
+- P4: Qwen3-VL often omits rows or identifiers (5 of 7 disagreements are "only in A" / B=None); the third pass then
+  follows model A. evidence_09 search_1874 email g.silva76.jr vs g.silva76jr was reconciled to the dotted form (Phase 6
+  adversarial example). No row in the ledger is an extraction_failed file today.
+- P4: price table is an estimate; one unlogged probe call (~40 tokens) and two debugging calls were made outside the ledger.
+- P4: full-run split now 355 INCOMPLETE / 153 COMPLETE / 10 NOT_APPLICABLE; 0 future-evidence citations; 16 steps cite PNG/PDF.
 
 - P3b: case_53 (user_22) has no account at all; Phase 6 must list it as "account unknown". Its steps are still []
   as COMPLETE because its other records are unprovable at audit_at; Phase 5 validator should flag empty COMPLETE.
@@ -266,6 +307,16 @@ Files: changed `code/ghost/discovery.py`, `code/ghost/engine.py` (account-unknow
   filtered out true accounts logged 2h05-2h15 before reported_at, so cases competed for neighbours' accounts ->
   NEAR_REPORT_MIN=150 plus a one-to-one leftover pass over orphan account activities (chosen=None 18 -> 1).
 
+- P4: crash on --classify-intent (Bedrock 400 "text content blocks must be non-empty") -> an empty first reply was
+  re-sent as an empty assistant turn in the schema re-ask -> re-ask fresh when the previous reply is empty; 4xx -> ExtractionFailed.
+- P4: 5 sample cases (case_06/21/25/27/28) classified NOT_APPLICABLE although every sample authorizes deletion -> prompt
+  read "verify my deletion / remove the leftover search result" as a status question -> prompt states that follow-ups
+  asking to finish, verify or clean up the person's own deletion authorize deletion (NA 15 -> 10, 0 activity disagreements).
+- P4: case_07 support_001 graded REDACT instead of DELETE -> vision rows took the support_ prefix default SUPPORT_MESSAGE
+  (rule_05 REDACT) though evidence_58 is the customer's uploaded attachment -> model emits a validated category and the
+  merge prefers SUPPORT_ATTACHMENT (rule_06 DELETE) (25 -> 26/32).
+- P4: support_9538 emitted 3 times by the reconcile pass -> no per-resource merge -> merge rows by resource_id.
+
 (append per tuning iteration; this is what the judges asked for)
 
 ## Verifier findings after Phase 3 (2026-10-25)
@@ -281,6 +332,6 @@ Files: changed `code/ghost/discovery.py`, `code/ghost/engine.py` (account-unknow
 
 ## Next step
 
-Phase 4 (Vision extraction + intent classifier + triage): vision rows for the 11 PNG + 4 PDF files must close
-case_07/18/20 and be fed back into discovery (accounts for case_23/28/29, ties such as case_03); then
-`--grade` again. Paste the prompts.md "Phase 4" block.
+Phase 5 (Full run + validator): write output.csv for all 518 cases from the cached pipeline (`_audits`, zero LLM calls),
+add the validator (518 rows, sorted, JSON/phase/operation checks, zero future citations, flag empty COMPLETE such as
+case_53). Paste the prompts.md "Phase 5" block.

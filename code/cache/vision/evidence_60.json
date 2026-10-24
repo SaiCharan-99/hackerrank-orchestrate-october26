@@ -1,0 +1,106 @@
+{
+  "agreement": false,
+  "detail_panel": {
+    "Audience": "Returning customers \u2014 East Asia",
+    "Click rate": "6.8%",
+    "Last campaign": "Autumn offers",
+    "Open rate": "32.4%",
+    "Preferred categories": "Desk accessories \u00b7 Drinkware",
+    "Segments": "Repeat customer \u00b7 Home & lifestyle \u00b7 Mobile shopper"
+  },
+  "disagreements": [
+    "marketing_001: only in A"
+  ],
+  "error": "",
+  "fallback_used": "third_pass",
+  "file_id": "evidence_60",
+  "models": [
+    "claude-sonnet",
+    "bedrock/qwen.qwen3-vl-235b-a22b"
+  ],
+  "raw": {
+    "model_a": {
+      "detail_panel": {
+        "Audience": "Returning customers \u2014 East Asia",
+        "Click rate": "6.8%",
+        "Last campaign": "Autumn offers",
+        "Open rate": "32.4%",
+        "Preferred categories": "Desk accessories \u00b7 Drinkware",
+        "Segments": "Repeat customer \u00b7 Home & lifestyle \u00b7 Mobile shopper"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "MARKETING_PROFILE",
+          "customer_reference": null,
+          "email": "sj.park@naver.com",
+          "email_hash": null,
+          "enabled": null,
+          "name": "Soo-jin Park",
+          "observed_at": null,
+          "phone": "+82 10-5837-9451",
+          "pointer": "header",
+          "present": true,
+          "redacted": null,
+          "resource_id": "marketing_001",
+          "restore_allowed": null,
+          "status_text": "Live"
+        }
+      ]
+    },
+    "model_b": {
+      "detail_panel": {},
+      "rows": []
+    },
+    "reconciled": {
+      "detail_panel": {
+        "Audience": "Returning customers \u2014 East Asia",
+        "Click rate": "6.8%",
+        "Last campaign": "Autumn offers",
+        "Open rate": "32.4%",
+        "Preferred categories": "Desk accessories \u00b7 Drinkware",
+        "Segments": "Repeat customer \u00b7 Home & lifestyle \u00b7 Mobile shopper"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "MARKETING_PROFILE",
+          "customer_reference": null,
+          "email": "sj.park@naver.com",
+          "email_hash": null,
+          "enabled": null,
+          "name": "Soo-jin Park",
+          "observed_at": null,
+          "phone": "+82 10-5837-9451",
+          "pointer": "header",
+          "present": true,
+          "redacted": null,
+          "resource_id": "marketing_001",
+          "restore_allowed": null,
+          "status_text": "Live"
+        }
+      ]
+    },
+    "source": "image"
+  },
+  "rows": [
+    {
+      "anonymized": null,
+      "category": "MARKETING_PROFILE",
+      "customer_reference": null,
+      "email": "sj.park@naver.com",
+      "email_hash": null,
+      "enabled": null,
+      "name": "Soo-jin Park",
+      "observed_at": null,
+      "phone": "+82 10-5837-9451",
+      "pointer": "header",
+      "present": true,
+      "redacted": null,
+      "resource_id": "marketing_001",
+      "restore_allowed": null,
+      "status_text": "Live"
+    }
+  ],
+  "version": 2
+}

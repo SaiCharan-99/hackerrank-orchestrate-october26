@@ -1,0 +1,200 @@
+{
+  "agreement": false,
+  "detail_panel": {
+    "Destination": "customer_analytics_warehouse",
+    "Last response": "200 OK \u00b7 1.8 s",
+    "Owner": "Data Platform",
+    "Selector": "jain.aditi@gmail.com",
+    "Status": "Healthy",
+    "Sync mode": "Continuous sync"
+  },
+  "disagreements": [
+    "data_flow_1121.email: A='jain.aditi@gmail.com' B=None",
+    "data_flow_9846.email: A='lucia-torres@gmail.com' B=None"
+  ],
+  "error": "",
+  "fallback_used": "third_pass",
+  "file_id": "evidence_14",
+  "models": [
+    "claude-sonnet",
+    "bedrock/qwen.qwen3-vl-235b-a22b"
+  ],
+  "raw": {
+    "model_a": {
+      "detail_panel": {
+        "Destination": "customer_analytics_warehouse",
+        "Last response": "200 OK \u00b7 1.8 s",
+        "Owner": "Data Platform",
+        "Selector": "jain.aditi@gmail.com",
+        "Status": "Healthy",
+        "Sync mode": "Continuous sync"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "DATA_FLOW",
+          "customer_reference": null,
+          "email": "jain.aditi@gmail.com",
+          "email_hash": null,
+          "enabled": true,
+          "name": null,
+          "observed_at": null,
+          "phone": null,
+          "pointer": "table row 1; detail panel header; detail panel; activity timeline",
+          "present": true,
+          "redacted": null,
+          "resource_id": "data_flow_1121",
+          "restore_allowed": null,
+          "status_text": "Healthy"
+        },
+        {
+          "anonymized": null,
+          "category": "DATA_FLOW",
+          "customer_reference": null,
+          "email": "lucia-torres@gmail.com",
+          "email_hash": null,
+          "enabled": true,
+          "name": null,
+          "observed_at": null,
+          "phone": null,
+          "pointer": "table row 2",
+          "present": true,
+          "redacted": null,
+          "resource_id": "data_flow_9846",
+          "restore_allowed": null,
+          "status_text": "Continuous"
+        }
+      ]
+    },
+    "model_b": {
+      "detail_panel": {
+        "Destination": "customer_analytics_warehouse",
+        "Last response": "200 OK - 1.8 s",
+        "Owner": "Data Platform",
+        "Selector": "jain.aditi@gmail.com",
+        "Status": "Healthy",
+        "Sync mode": "Continuous sync"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "DATA_FLOW",
+          "customer_reference": null,
+          "email": null,
+          "email_hash": null,
+          "enabled": true,
+          "name": null,
+          "observed_at": null,
+          "phone": null,
+          "pointer": "detail panel",
+          "present": true,
+          "redacted": null,
+          "resource_id": "data_flow_1121",
+          "restore_allowed": null,
+          "status_text": "Healthy"
+        },
+        {
+          "anonymized": null,
+          "category": "DATA_FLOW",
+          "customer_reference": null,
+          "email": null,
+          "email_hash": null,
+          "enabled": true,
+          "name": null,
+          "observed_at": null,
+          "phone": null,
+          "pointer": "table row 2",
+          "present": true,
+          "redacted": null,
+          "resource_id": "data_flow_9846",
+          "restore_allowed": null,
+          "status_text": ""
+        }
+      ]
+    },
+    "reconciled": {
+      "detail_panel": {
+        "Destination": "customer_analytics_warehouse",
+        "Last response": "200 OK \u00b7 1.8 s",
+        "Owner": "Data Platform",
+        "Selector": "jain.aditi@gmail.com",
+        "Status": "Healthy",
+        "Sync mode": "Continuous sync"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "DATA_FLOW",
+          "customer_reference": null,
+          "email": "jain.aditi@gmail.com",
+          "email_hash": null,
+          "enabled": true,
+          "name": null,
+          "observed_at": null,
+          "phone": null,
+          "pointer": "table row 1; detail panel",
+          "present": true,
+          "redacted": null,
+          "resource_id": "data_flow_1121",
+          "restore_allowed": null,
+          "status_text": "Healthy"
+        },
+        {
+          "anonymized": null,
+          "category": "DATA_FLOW",
+          "customer_reference": null,
+          "email": "lucia-torres@gmail.com",
+          "email_hash": null,
+          "enabled": true,
+          "name": null,
+          "observed_at": null,
+          "phone": null,
+          "pointer": "table row 2",
+          "present": true,
+          "redacted": null,
+          "resource_id": "data_flow_9846",
+          "restore_allowed": null,
+          "status_text": ""
+        }
+      ]
+    },
+    "source": "image"
+  },
+  "rows": [
+    {
+      "anonymized": null,
+      "category": "DATA_FLOW",
+      "customer_reference": null,
+      "email": "jain.aditi@gmail.com",
+      "email_hash": null,
+      "enabled": true,
+      "name": null,
+      "observed_at": null,
+      "phone": null,
+      "pointer": "table row 1; detail panel",
+      "present": true,
+      "redacted": null,
+      "resource_id": "data_flow_1121",
+      "restore_allowed": null,
+      "status_text": "Healthy"
+    },
+    {
+      "anonymized": null,
+      "category": "DATA_FLOW",
+      "customer_reference": null,
+      "email": "lucia-torres@gmail.com",
+      "email_hash": null,
+      "enabled": true,
+      "name": null,
+      "observed_at": null,
+      "phone": null,
+      "pointer": "table row 2",
+      "present": true,
+      "redacted": null,
+      "resource_id": "data_flow_9846",
+      "restore_allowed": null,
+      "status_text": ""
+    }
+  ],
+  "version": 2
+}

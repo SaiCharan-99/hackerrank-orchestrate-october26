@@ -1,0 +1,106 @@
+{
+  "agreement": true,
+  "detail_panel": {
+    "Assigned agent": "Maya Chen",
+    "Carrier": "SwiftShip",
+    "Expected": "26 May 2026",
+    "Product": "Running shoes",
+    "Status": "In transit",
+    "Tracking": "SWF-884103"
+  },
+  "disagreements": [],
+  "error": "",
+  "fallback_used": "",
+  "file_id": "evidence_28",
+  "models": [
+    "claude-sonnet",
+    "bedrock/qwen.qwen3-vl-235b-a22b"
+  ],
+  "raw": {
+    "model_a": {
+      "detail_panel": {
+        "Assigned agent": "Maya Chen",
+        "Carrier": "SwiftShip",
+        "Expected": "26 May 2026",
+        "Product": "Running shoes",
+        "Status": "In transit",
+        "Tracking": "SWF-884103"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "SUPPORT_MESSAGE",
+          "customer_reference": null,
+          "email": "kagyeman8947@fastmail.com",
+          "email_hash": null,
+          "enabled": null,
+          "name": "Kofi Agyeman",
+          "observed_at": null,
+          "phone": null,
+          "pointer": "header subtitle",
+          "present": true,
+          "redacted": null,
+          "resource_id": "support_1034",
+          "restore_allowed": null,
+          "status_text": "Normal priority"
+        }
+      ]
+    },
+    "model_b": {
+      "detail_panel": {
+        "Activity": "22 May Order confirmed\n23 May Dispatched\n24 May 07:46 Reached regional hub\n24 May 08:15 In transit\n26 May Delivery expected",
+        "Assigned": "Maya Chen",
+        "Assigned agent": "Maya Chen",
+        "Carrier": "SwiftShip",
+        "Customer": "Kofi Agyeman",
+        "Email": "kagyeman8947@fastmail.com",
+        "Expected": "26 May 2026",
+        "Order": "ORD-20265034",
+        "Product": "Running shoes",
+        "Status": "In transit",
+        "Tags": "Delivery \u00b7 Tracking \u00b7 Order update",
+        "Tracking": "SWF-884103"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "SUPPORT_MESSAGE",
+          "customer_reference": null,
+          "email": "kagyeman8947@fastmail.com",
+          "email_hash": null,
+          "enabled": null,
+          "name": "Kofi Agyeman",
+          "observed_at": null,
+          "phone": null,
+          "pointer": "header",
+          "present": true,
+          "redacted": null,
+          "resource_id": "support_1034",
+          "restore_allowed": null,
+          "status_text": "Normal priority"
+        }
+      ]
+    },
+    "source": "image"
+  },
+  "rows": [
+    {
+      "anonymized": null,
+      "category": "SUPPORT_MESSAGE",
+      "customer_reference": null,
+      "email": "kagyeman8947@fastmail.com",
+      "email_hash": null,
+      "enabled": null,
+      "name": "Kofi Agyeman",
+      "observed_at": null,
+      "phone": null,
+      "pointer": "header subtitle",
+      "present": true,
+      "redacted": null,
+      "resource_id": "support_1034",
+      "restore_allowed": null,
+      "status_text": "Normal priority"
+    }
+  ],
+  "version": 2
+}

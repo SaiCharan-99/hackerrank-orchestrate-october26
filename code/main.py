@@ -8,6 +8,11 @@ Usage:  python code/main.py --counts
         python code/main.py --discovery
         python code/main.py --grade [--analytics-hypothesis H]
         python code/main.py --case <case_id>
+        python code/main.py --dry-run-cost
+        python code/main.py --extract-vision [--refresh-cache]
+        python code/main.py --classify-intent [--refresh-cache]
+        python code/main.py --triage [--refresh-cache]
+        python code/main.py --usage
 """
 from __future__ import annotations
 
@@ -109,7 +114,7 @@ def cmd_identity_check() -> int:
 def cmd_evidence(resource_id: str) -> int:
     from ghost.evidence import build_evidence_index
 
-    index = build_evidence_index(load_all(DATASET_DIR))
+    index, _ = evidence_with_vision(load_all(DATASET_DIR))
     rows = index.rows_for(resource_id)
     print(f"{resource_id}: {len(rows)} rows")
     for r in rows:
@@ -129,7 +134,7 @@ def cmd_coverage() -> int:
     from ghost.evidence import build_evidence_index
 
     data = load_all(DATASET_DIR)
-    index = build_evidence_index(data)
+    index, _ = evidence_with_vision(data)  # text + cached vision rows
     manifest = data.evidence_manifest.set_index("file_id")
     print("Per-file rows")
     for fid in sorted(index.file_formats):
@@ -183,8 +188,20 @@ def cmd_discovery() -> int:
     from ghost.evidence import build_evidence_index
 
     data = load_all(DATASET_DIR)
-    results = discover(data, build_index(data), build_evidence_index(data))
+    text_only = discover(data, build_index(data), build_evidence_index(data))
+    index, n_vision = evidence_with_vision(data)
+    results = discover(data, build_index(data), index)
     eval_ids = list(data.requests["case_id"])
+    all_ids = list(results)
+    amb_before = [c for c in all_ids if text_only[c].ambiguous]
+    amb_after = [c for c in all_ids if results[c].ambiguous]
+    fixed = [c for c in amb_before if not results[c].ambiguous]
+    changed = [c for c in all_ids if text_only[c].chosen_account != results[c].chosen_account]
+    print(f"Vision rows added to the index: {n_vision}")
+    print(f"Ambiguous cases (eval+sample) text-only: {len(amb_before)}  with vision rows: {len(amb_after)}  "
+          f"resolved by vision rows: {len(fixed)} {fixed}")
+    print(f"Chosen account changed by vision rows: {len(changed)} "
+          + " ".join(f"{c}:{text_only[c].chosen_account}->{results[c].chosen_account}" for c in changed))
     hist = histogram(results, eval_ids)
     print(f"Candidate-set size histogram over {len(eval_ids)} evaluation cases")
     for size in sorted(hist):
@@ -218,20 +235,49 @@ def cmd_discovery() -> int:
     return 0 if tally["miss"] == 0 else 1
 
 
+def evidence_with_vision(data):
+    """Text EvidenceIndex plus cached vision rows (never calls the gateway)."""
+    from ghost.evidence import build_evidence_index
+    from ghost.evidence.vision import add_to_index, extract_all
+
+    index = build_evidence_index(data)
+    results = extract_all(data, None, load_config(), only_cached=True)
+    return index, add_to_index(index, data, results)
+
+
 def _audits(hypothesis=None):
+    """Full deterministic pipeline from caches: text + vision rows -> discovery -> triage -> intent -> engine."""
     import pandas as pd
 
     from ghost.discovery import discover
-    from ghost.engine import ANALYTICS_HYPOTHESIS, audit_all
-    from ghost.evidence import build_evidence_index
+    from ghost.engine import ANALYTICS_HYPOTHESIS, audit_case
+    from ghost.intent import classify_requests
+    from ghost.triage import load_cache, triage_case
 
     data = load_all(DATASET_DIR)
-    index = build_evidence_index(data)
-    results = discover(data, build_index(data), index)
+    index, _ = evidence_with_vision(data)
+    ids = build_index(data)
+    results = discover(data, ids, index)
     reqs = pd.concat([data.requests, data.sample_requests], ignore_index=True)
-    # Phase 3: intent is assumed DELETION for every case (the classifier arrives in Phase 4).
-    audits = audit_all(reqs, results, index, data.rules, data.activity,
-                       analytics_hypothesis=hypothesis or ANALYTICS_HYPOTHESIS)
+    intents = classify_requests(reqs, only_cached=True)
+    tcache = load_cache()
+    failed = {f: index.file_times[f] for f, e in index.errors.items() if e.startswith("extraction_failed")}
+    audits = {}
+    for r in reqs.itertuples(index=False):
+        d = results[r.case_id]
+        tri = triage_case(d, ids, index, r.audit_at, cache=tcache, only_cached=True)
+        if tri.included:
+            d.resources = sorted(set(d.resources) | set(tri.included))
+        ca = audit_case(r, results, index, data.rules, data.activity,
+                        authorizes_deletion=intents[r.case_id].authorizes_deletion,
+                        analytics_hypothesis=hypothesis or ANALYTICS_HYPOTHESIS)
+        if intents[r.case_id].source == "fallback":
+            ca.notes.append(f"intent: {intents[r.case_id].reason}")
+        if tri.flagged:
+            ca.notes.append(f"triage: {tri.flagged}")
+        ca.notes += [f"triage included {x}" for x in tri.included]
+        ca.notes += [f"evidence-limited: {f} extraction failed" for f, t in sorted(failed.items()) if t <= r.audit_at]
+        audits[r.case_id] = ca
     return data, index, audits
 
 
@@ -283,6 +329,146 @@ def cmd_case(case_id: str) -> int:
     return 0
 
 
+def _usage_table() -> str:
+    from ghost.llm import ledger_totals
+
+    t = ledger_totals()
+    lines = [f"  {'model':<36} {'calls':>5} {'prompt_tok':>10} {'compl_tok':>9} {'est_usd':>8}"]
+    for m in sorted(t, key=lambda k: (k == "ALL", k)):
+        v = t[m]
+        lines.append(f"  {m:<36} {v['calls']:>5} {v['prompt_tokens']:>10} {v['completion_tokens']:>9} "
+                     f"{v['cost_usd']:>8.4f}")
+    return "Usage ledger (code/cache/usage_log.jsonl)\n" + "\n".join(lines)
+
+
+def cmd_usage() -> int:
+    print(_usage_table())
+    return 0
+
+
+def cmd_dry_run_cost() -> int:
+    """Estimate calls/tokens/cost for everything not yet cached. Makes no calls."""
+    import json
+
+    import pandas as pd
+
+    from ghost.evidence.vision import load_cached
+    from ghost.intent import INTENT_CACHE, prefilter, text_hash
+    from ghost.llm import estimate_cost
+
+    cfg = load_config()
+    data = load_all(DATASET_DIR)
+    files = [m for m in data.evidence_manifest.itertuples(index=False)
+             if m.file_path.lower().endswith((".png", ".pdf"))]
+    todo = [m for m in files if load_cached(m.file_id) is None]
+    reqs = pd.concat([data.requests, data.sample_requests], ignore_index=True)
+    texts = sorted(set(reqs["request_text"]))
+    cached = json.loads(INTENT_CACHE.read_text(encoding="utf-8")) if INTENT_CACHE.exists() else {}
+    need = [t for t in texts if prefilter(t) is None and text_hash(t) not in cached]
+    # per-call (prompt, completion) token estimates: image ~1.6k + prompt 0.8k; reconcile on ~1/3 of files
+    plan = [("vision A", cfg.vision_model, len(todo), 2600, 1500),
+            ("vision B", cfg.vision_model_b, len(todo), 2600, 1500),
+            ("reconcile", cfg.vision_model, -(-len(todo) // 3), 5500, 1500),
+            ("intent", cfg.text_model, len(need), 350, 60)]
+    total = 0.0
+    print(f"Vision files (PNG+PDF): {len(files)}  uncached: {len(todo)}")
+    print(f"Distinct request texts: {len(texts)}  decided by keyword pre-filter: "
+          f"{sum(prefilter(t) is not None for t in texts)}  uncached for the model: {len(need)}")
+    print(f"  {'role':<10} {'model':<36} {'calls':>5} {'est_usd':>8}")
+    for role, model, n, pin, pout in plan:
+        c = n * estimate_cost(model, pin, pout)
+        total += c
+        print(f"  {role:<10} {model:<36} {n:>5} {c:>8.4f}")
+    print(f"Estimated cost of uncached work: ${total:.4f} (LLM_BUDGET_USD={cfg.budget_usd}); "
+          f"triage adds ~1 call per case with partial/conflicting rows (see --triage)")
+    return 0
+
+
+def cmd_extract_vision(refresh: bool) -> int:
+    from ghost.evidence.vision import extract_all
+    from ghost.llm import LLM
+
+    data = load_all(DATASET_DIR)
+    results = extract_all(data, LLM(), load_config(), refresh=refresh)
+    agree = [r for r in results.values() if r.agreement]
+    failed = [r for r in results.values() if r.fallback_used == "extraction_failed"]
+    ran = len(results) - len(failed)
+    print(f"Files: {len(results)}  A/B agreement: {len(agree)}/{ran} ({len(agree) / max(1, ran):.0%})  "
+          f"failed: {len(failed)} {[r.file_id for r in failed]}")
+    for fid, r in sorted(results.items()):
+        print(f"  {fid:<12} rows={len(r.rows):>3} agreement={r.agreement!s:<5} {r.fallback_used or '-':<17} "
+              f"{', '.join(x['resource_id'] for x in r.rows)[:110]}")
+        for line in r.disagreements[:8]:
+            print(f"      diff: {line}")
+        if r.error:
+            print(f"      error: {r.error[:200]}")
+    print(_usage_table())
+    return 0 if not failed else 1
+
+
+def cmd_classify_intent(refresh: bool) -> int:
+    from collections import Counter
+
+    import pandas as pd
+
+    from ghost.discovery import discover
+    from ghost.intent import classify_requests, cross_check
+    from ghost.llm import LLM
+
+    cfg = load_config()
+    data = load_all(DATASET_DIR)
+    reqs = pd.concat([data.requests, data.sample_requests], ignore_index=True)
+    intents = classify_requests(reqs, LLM(), cfg.text_model, refresh=refresh)
+    print(f"Cases: {len(intents)}  label source: {dict(Counter(i.source for i in intents.values()))}")
+    na = sorted((c for c, i in intents.items() if not i.authorizes_deletion), key=lambda c: (len(c), c))
+    print(f"NOT_APPLICABLE: {len(na)}")
+    text = dict(zip(reqs["case_id"], reqs["request_text"]))
+    for c in na:
+        print(f"  {c:<9} [{intents[c].language}] {intents[c].reason} | {text[c][:80]}")
+    fb = sorted(c for c, i in intents.items() if i.source == "fallback")
+    print(f"Fallback (unclassified) cases: {len(fb)} {fb[:20]}")
+    index, _ = evidence_with_vision(data)
+    results = discover(data, build_index(data), index)
+    dis = cross_check(intents, results, data.activity)
+    print(f"Intent vs CLASSIFY_REQUEST non-deletion activity: {len(dis)} disagreement(s)")
+    for line in dis:
+        print(f"  {line}")
+    print(_usage_table())
+    return 0
+
+
+def cmd_triage(refresh: bool) -> int:
+    import pandas as pd
+
+    from ghost.discovery import discover
+    from ghost.llm import LLM
+    from ghost.triage import load_cache, save_cache, triage_case
+
+    cfg = load_config()
+    data = load_all(DATASET_DIR)
+    index, _ = evidence_with_vision(data)
+    ids = build_index(data)
+    results = discover(data, ids, index)
+    reqs = pd.concat([data.requests, data.sample_requests], ignore_index=True)
+    cache = {} if refresh else load_cache()
+    llm = LLM()
+    n_cases = n_rows = 0
+    for r in reqs.itertuples(index=False):
+        t = triage_case(results[r.case_id], ids, index, r.audit_at, llm, cfg.triage_model, cache=cache)
+        if not t.candidates:
+            continue
+        n_cases += 1
+        n_rows += len(t.candidates)
+        print(f"  {r.case_id:<9} {len(t.candidates)} candidate row(s) included={t.included} "
+              f"rechecks={t.rechecks} {t.flagged}")
+        for k, d in sorted(t.decisions.items()):
+            print(f"      {k}: {d.decision} ({d.reason})")
+    save_cache(cache)
+    print(f"Triage: {n_cases} case(s), {n_rows} candidate row(s)")
+    print(_usage_table())
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Ghost Data Still Exists deletion-audit agent")
     parser.add_argument("--counts", action="store_true", help="print dataset table counts")
@@ -294,7 +480,23 @@ def main() -> int:
     parser.add_argument("--grade", action="store_true", help="Phase 3 sample grader")
     parser.add_argument("--analytics-hypothesis", choices=["attempted_delete", "always_anonymize"])
     parser.add_argument("--case", metavar="CASE_ID", help="print the CaseAudit for one case")
+    parser.add_argument("--dry-run-cost", action="store_true", help="estimate LLM cost of uncached work")
+    parser.add_argument("--extract-vision", action="store_true", help="Phase 4 PNG/PDF extraction")
+    parser.add_argument("--classify-intent", action="store_true", help="Phase 4 request intent classifier")
+    parser.add_argument("--triage", action="store_true", help="Phase 4 bounded evidence triage")
+    parser.add_argument("--refresh-cache", action="store_true", help="ignore LLM caches and call again")
+    parser.add_argument("--usage", action="store_true", help="print the usage ledger totals")
     args = parser.parse_args()
+    if args.dry_run_cost:
+        return cmd_dry_run_cost()
+    if args.extract_vision:
+        return cmd_extract_vision(args.refresh_cache)
+    if args.classify_intent:
+        return cmd_classify_intent(args.refresh_cache)
+    if args.triage:
+        return cmd_triage(args.refresh_cache)
+    if args.usage:
+        return cmd_usage()
     if args.counts:
         return cmd_counts()
     if args.subject:

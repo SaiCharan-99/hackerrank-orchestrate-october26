@@ -1,0 +1,47 @@
+{
+  "agreement": true,
+  "detail_panel": {
+    "03 Jun 2024": "Support link added",
+    "10 Mar 2026": "Metadata reviewed",
+    "11 Jan 2024": "Reference created",
+    "14 Feb 2024": "Support link added",
+    "22 Aug 2024": "Finance link added",
+    "Finance link added": "FIN-7742",
+    "Metadata reviewed": "Recorded",
+    "Order link added": "ORD-20263245",
+    "Reference created": "Recorded",
+    "Support links added": "CS-3245, CS-3378"
+  },
+  "disagreements": [],
+  "error": "",
+  "fallback_used": "",
+  "file_id": "evidence_42",
+  "models": [
+    "claude-sonnet",
+    "bedrock/qwen.qwen3-vl-235b-a22b"
+  ],
+  "raw": {
+    "model_a": {
+      "detail_panel": {
+        "03 Jun 2024": "Support link added",
+        "10 Mar 2026": "Metadata reviewed",
+        "11 Jan 2024": "Reference created",
+        "14 Feb 2024": "Support link added",
+        "22 Aug 2024": "Finance link added",
+        "Finance link added": "FIN-7742",
+        "Metadata reviewed": "Recorded",
+        "Order link added": "ORD-20263245",
+        "Reference created": "Recorded",
+        "Support links added": "CS-3245, CS-3378"
+      },
+      "rows": []
+    },
+    "model_b": {
+      "detail_panel": {},
+      "rows": []
+    },
+    "source": "image"
+  },
+  "rows": [],
+  "version": 2
+}

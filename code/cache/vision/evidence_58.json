@@ -1,0 +1,225 @@
+{
+  "agreement": false,
+  "detail_panel": {
+    "Customer request": "change apartment number from 14B to 18B and call before delivery",
+    "Product": "Stainless steel water bottle, quantity 2",
+    "captured": "12 Sep 2026 07:30 UTC",
+    "carrier": "SwiftShip",
+    "checksum prefix": "c90a42",
+    "email": "priya.raman@gmail.com",
+    "file": "delivery_address_correction.pdf",
+    "file size": "312 KB",
+    "name": "Priya Raman",
+    "order": "ORD-20264827",
+    "phone": "+91 98765 73142",
+    "preferred contact": "SMS",
+    "received": "18 Jun 2026",
+    "reference": "CS-4827 / support_001",
+    "region": "ap-south",
+    "submitted": "18 Jun 2026 10:24 UTC",
+    "ticket": "CS-4827",
+    "uploader": "customer"
+  },
+  "disagreements": [
+    "support_001.email: A='priya.raman@gmail.com' B=None",
+    "support_001.phone: A='+91 98765 73142' B=None"
+  ],
+  "error": "",
+  "fallback_used": "third_pass",
+  "file_id": "evidence_58",
+  "models": [
+    "claude-sonnet",
+    "bedrock/qwen.qwen3-vl-235b-a22b"
+  ],
+  "raw": {
+    "model_a": {
+      "detail_panel": {
+        "captured": "12 Sep 2026 07:30 UTC",
+        "carrier": "SwiftShip",
+        "checksum prefix": "c90a42",
+        "file": "delivery_address_correction.pdf",
+        "order": "ORD-20264827",
+        "preferred contact": "SMS",
+        "received": "18 Jun 2026",
+        "reference": "CS-4827 / support_001",
+        "region": "ap-south",
+        "submitted": "18 Jun 2026 10:24 UTC",
+        "ticket": "CS-4827",
+        "uploader": "customer"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "SUPPORT_MESSAGE",
+          "customer_reference": null,
+          "email": "priya.raman@gmail.com",
+          "email_hash": null,
+          "enabled": null,
+          "name": "Priya Raman",
+          "observed_at": "2026-06-18T10:24:00Z",
+          "phone": "+91 98765 73142",
+          "pointer": "header / record detail (Support reference CS-4827 / support_001)",
+          "present": true,
+          "redacted": null,
+          "resource_id": "support_001",
+          "restore_allowed": null,
+          "status_text": ""
+        }
+      ]
+    },
+    "model_b": {
+      "detail_panel": {
+        "Customer request": "change apartment number from 14B to 18B and call before delivery",
+        "Product": "Stainless steel water bottle, quantity 2",
+        "captured": "12 Sep 2026 07:30 UTC",
+        "carrier": "SwiftShip",
+        "checksum prefix": "c90a42",
+        "email": "priya.raman@gmail.com",
+        "file": "delivery_address_correction.pdf",
+        "file size": "312 KB",
+        "name": "Priya Raman",
+        "order": "ORD-20264827",
+        "phone": "+91 98765 73142",
+        "preferred contact": "SMS",
+        "received": "18 Jun 2026",
+        "reference": "CS-4827 / support_001",
+        "region": "ap-south",
+        "submitted": "18 Jun 2026 10:24 UTC",
+        "ticket": "CS-4827",
+        "uploader": "customer"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "SUPPORT_MESSAGE",
+          "customer_reference": null,
+          "email": "priya.raman@gmail.com",
+          "email_hash": null,
+          "enabled": null,
+          "name": "Priya Raman",
+          "observed_at": "2026-06-18T10:24:00Z",
+          "phone": "+91 98765 73142",
+          "pointer": "header",
+          "present": true,
+          "redacted": null,
+          "resource_id": "support_001",
+          "restore_allowed": null,
+          "status_text": ""
+        },
+        {
+          "anonymized": null,
+          "category": "SUPPORT_ATTACHMENT",
+          "customer_reference": null,
+          "email": null,
+          "email_hash": null,
+          "enabled": null,
+          "name": null,
+          "observed_at": "2026-09-12T07:30:00Z",
+          "phone": null,
+          "pointer": "detail panel",
+          "present": true,
+          "redacted": null,
+          "resource_id": "support_001",
+          "restore_allowed": null,
+          "status_text": ""
+        }
+      ]
+    },
+    "reconciled": {
+      "detail_panel": {
+        "Customer request": "change apartment number from 14B to 18B and call before delivery",
+        "Product": "Stainless steel water bottle, quantity 2",
+        "captured": "12 Sep 2026 07:30 UTC",
+        "carrier": "SwiftShip",
+        "checksum prefix": "c90a42",
+        "email": "priya.raman@gmail.com",
+        "file": "delivery_address_correction.pdf",
+        "file size": "312 KB",
+        "name": "Priya Raman",
+        "order": "ORD-20264827",
+        "phone": "+91 98765 73142",
+        "preferred contact": "SMS",
+        "received": "18 Jun 2026",
+        "reference": "CS-4827 / support_001",
+        "region": "ap-south",
+        "submitted": "18 Jun 2026 10:24 UTC",
+        "ticket": "CS-4827",
+        "uploader": "customer"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "SUPPORT_MESSAGE",
+          "customer_reference": null,
+          "email": "priya.raman@gmail.com",
+          "email_hash": null,
+          "enabled": null,
+          "name": "Priya Raman",
+          "observed_at": "2026-06-18T10:24:00Z",
+          "phone": "+91 98765 73142",
+          "pointer": "header",
+          "present": true,
+          "redacted": null,
+          "resource_id": "support_001",
+          "restore_allowed": null,
+          "status_text": ""
+        },
+        {
+          "anonymized": null,
+          "category": "SUPPORT_ATTACHMENT",
+          "customer_reference": null,
+          "email": null,
+          "email_hash": null,
+          "enabled": null,
+          "name": null,
+          "observed_at": "2026-09-12T07:30:00Z",
+          "phone": null,
+          "pointer": "detail panel",
+          "present": true,
+          "redacted": null,
+          "resource_id": "support_001",
+          "restore_allowed": null,
+          "status_text": ""
+        }
+      ]
+    },
+    "source": "pdf_text"
+  },
+  "rows": [
+    {
+      "anonymized": null,
+      "category": "SUPPORT_MESSAGE",
+      "customer_reference": null,
+      "email": "priya.raman@gmail.com",
+      "email_hash": null,
+      "enabled": null,
+      "name": "Priya Raman",
+      "observed_at": "2026-06-18T10:24:00Z",
+      "phone": "+91 98765 73142",
+      "pointer": "header",
+      "present": true,
+      "redacted": null,
+      "resource_id": "support_001",
+      "restore_allowed": null,
+      "status_text": ""
+    },
+    {
+      "anonymized": null,
+      "category": "SUPPORT_ATTACHMENT",
+      "customer_reference": null,
+      "email": null,
+      "email_hash": null,
+      "enabled": null,
+      "name": null,
+      "observed_at": "2026-09-12T07:30:00Z",
+      "phone": null,
+      "pointer": "detail panel",
+      "present": true,
+      "redacted": null,
+      "resource_id": "support_001",
+      "restore_allowed": null,
+      "status_text": ""
+    }
+  ],
+  "version": 2
+}

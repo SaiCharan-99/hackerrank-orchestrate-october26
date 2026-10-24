@@ -1,0 +1,35 @@
+{
+  "agreement": true,
+  "detail_panel": {
+    "Register month": "May 2026",
+    "classification": "Internal",
+    "generated": "29 May 2026 08:00 UTC",
+    "owner": "Finance Records"
+  },
+  "disagreements": [],
+  "error": "",
+  "fallback_used": "pdf_text",
+  "file_id": "evidence_27",
+  "models": [
+    "claude-sonnet",
+    "bedrock/qwen.qwen3-vl-235b-a22b"
+  ],
+  "raw": {
+    "model_a": {
+      "detail_panel": {
+        "Register month": "May 2026",
+        "classification": "Internal",
+        "generated": "29 May 2026 08:00 UTC",
+        "owner": "Finance Records"
+      },
+      "rows": []
+    },
+    "model_b": {
+      "detail_panel": {},
+      "rows": []
+    },
+    "source": "pdf_text"
+  },
+  "rows": [],
+  "version": 2
+}

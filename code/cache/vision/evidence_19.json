@@ -1,0 +1,109 @@
+{
+  "agreement": false,
+  "detail_panel": {
+    "Audience": "Returning shopper",
+    "First seen": "21 Apr 2026 09:14 UTC",
+    "Interest": "Coffee & dining",
+    "Last activity": "13 Jul 2026 14:22 UTC",
+    "Market": "AE"
+  },
+  "disagreements": [
+    "analytics_7438: only in A"
+  ],
+  "error": "",
+  "fallback_used": "third_pass",
+  "file_id": "evidence_19",
+  "models": [
+    "claude-sonnet",
+    "bedrock/qwen.qwen3-vl-235b-a22b"
+  ],
+  "raw": {
+    "model_a": {
+      "detail_panel": {
+        "Audience": "Returning shopper",
+        "First seen": "21 Apr 2026 09:14 UTC",
+        "Interest": "Coffee & dining",
+        "Last activity": "13 Jul 2026 14:22 UTC",
+        "Market": "AE"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "ANALYTICS_PROFILE",
+          "customer_reference": "user_20",
+          "email": "darwish.omar@icloud.com",
+          "email_hash": null,
+          "enabled": null,
+          "name": "Omar Darwish",
+          "observed_at": null,
+          "phone": null,
+          "pointer": "header",
+          "present": true,
+          "redacted": null,
+          "resource_id": "analytics_7438",
+          "restore_allowed": null,
+          "status_text": ""
+        }
+      ]
+    },
+    "model_b": {
+      "detail_panel": {
+        "Audience": "Returning shopper",
+        "First seen": "21 Apr 2026 09:14 UTC",
+        "Interest": "Coffee & dining",
+        "Last activity": "13 Jul 2026 14:22 UTC",
+        "Market": "AE"
+      },
+      "rows": []
+    },
+    "reconciled": {
+      "detail_panel": {
+        "Audience": "Returning shopper",
+        "First seen": "21 Apr 2026 09:14 UTC",
+        "Interest": "Coffee & dining",
+        "Last activity": "13 Jul 2026 14:22 UTC",
+        "Market": "AE"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "ANALYTICS_PROFILE",
+          "customer_reference": "user_20",
+          "email": "darwish.omar@icloud.com",
+          "email_hash": null,
+          "enabled": null,
+          "name": "Omar Darwish",
+          "observed_at": null,
+          "phone": null,
+          "pointer": "header",
+          "present": true,
+          "redacted": null,
+          "resource_id": "analytics_7438",
+          "restore_allowed": null,
+          "status_text": ""
+        }
+      ]
+    },
+    "source": "image"
+  },
+  "rows": [
+    {
+      "anonymized": null,
+      "category": "ANALYTICS_PROFILE",
+      "customer_reference": "user_20",
+      "email": "darwish.omar@icloud.com",
+      "email_hash": null,
+      "enabled": null,
+      "name": "Omar Darwish",
+      "observed_at": null,
+      "phone": null,
+      "pointer": "header",
+      "present": true,
+      "redacted": null,
+      "resource_id": "analytics_7438",
+      "restore_allowed": null,
+      "status_text": ""
+    }
+  ],
+  "version": 2
+}

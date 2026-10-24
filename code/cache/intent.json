@@ -1,0 +1,261 @@
+{
+  "086ebbffe64ef344fe110da2f815774cfa7ac5176c00fe5417ba2f62ff17ee21": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The request explicitly asks to delete the account and its downloadable archive and to remove search results pointing to the person, with only security records excepted, so it authorizes deletion.",
+    "source": "model:claude-haiku",
+    "text": "Please delete this account, including the downloadable archive I requested earlier and any search result that still points to me. Security records can stay if policy requires them."
+  },
+  "0a14059fb768f2c86250d8aa43c7acc570ef283b7ac9c90ee02a7847eb17ea84": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The request explicitly asks to delete the person's account and the identity document they sent to support, which is an erasure request.",
+    "source": "model:claude-haiku",
+    "text": "Please delete my account and the identity document I sent to support while resolving a delivery issue."
+  },
+  "170c3253dbfb4d839c14c89f2da54fe7db7f8e5946688b8a0928d595e8b8a6e4": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The user asks to close the account completely and stop an integration from sending their data, which is a follow-up to finish the account closure and remove data flows.",
+    "source": "model:claude-haiku",
+    "text": "I disconnected my account last week, but one of the integrations still seems active. Close the account completely and make sure it can no longer send my data to other systems."
+  },
+  "1d3f4a67e369fcc749655e6b1539409c1580c38f24413462e44dc0bece9e2e1c": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The request asks to remove the person's records under both email addresses and to switch off integrations that would copy them back into search or analytics, which is erasure of personal data.",
+    "source": "model:claude-haiku",
+    "text": "I used a different email on this account before changing it. Please remove records under both addresses and switch off any integration that could copy them back into search or analytics."
+  },
+  "215928d9830b2c61ae7bd2250f1204b1a1e8541d2db3ac878afcf35b5fc7cf2f": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The user is following up on their own account deletion and asks that all data tied to the old email be checked and removed, including from systems that do not display it.",
+    "source": "model:claude-haiku",
+    "text": "I changed the email on this account before deleting it. Please check that nothing tied to the old address was left behind, even in systems that do not display the email."
+  },
+  "3a2ee5d14b92a4a3f3ca6e626f2681b025e95119f929dd46a1555d9f85762b0e": {
+    "authorizes_deletion": false,
+    "language": "en",
+    "reason": "The request asks what personal information is held and explicitly states it is not a request to erase data, so it is an information request rather than deletion.",
+    "source": "model:claude-haiku",
+    "text": "Can you tell me what personal information you hold about me? This is an information request, not a request to erase it."
+  },
+  "3dce26fb1d5dd0700963dc241e66a63ad5533a14595278d60cb463e4a9a11a7e": {
+    "authorizes_deletion": true,
+    "language": "es",
+    "reason": "The user says their earlier account deletion failed and asks the shop to check for remaining data and complete the deletion, which is a follow-up deletion request.",
+    "source": "model:claude-haiku",
+    "text": "Intenté eliminar mi cuenta ayer, pero la página terminó mostrando un error. ¿Pueden comprobar si todavía queda algún dato y completar la eliminación si hace falta?"
+  },
+  "41c1fd4bd33d10123dee97289d4ea140b95fa2e6e3ffc92de72819280d077710": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "This is a follow-up to the person's own deletion, asking that remaining copies of their profile be removed because the email is still recognized, which falls under the deletion category.",
+    "source": "model:claude-haiku",
+    "text": "I deleted this account and received a confirmation, but the same email address is still recognized. Please remove any remaining copy of my profile."
+  },
+  "4687d498ac735f35e292ef99fc03c1fbac1efb454bdcf5cb9dccd8fbad212814": {
+    "authorizes_deletion": true,
+    "language": "es",
+    "reason": "The request explicitly asks for permanent deletion of the account associated with the email and for the current and previous identifiers to be reviewed under the privacy policy, which is a deletion request.",
+    "source": "model:claude-haiku",
+    "text": "Solicito la eliminación permanente de la cuenta asociada a este correo. Revisen los identificadores actuales y anteriores según su política de privacidad. Por favor, confirmen el resultado cuando termine la revisión."
+  },
+  "49c9b9f6ab21c5d477e670fa9b50cd613a07a27a04704af7f8a3e0e5a87a70f0": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "This is a follow-up on a failed deletion request, asking the reviewer to verify whether the account and identifiable analytics data have been removed, which counts as deletion.",
+    "source": "model:claude-haiku",
+    "text": "The privacy page still says my request failed. Please inspect the actual systems and tell me whether the account and identifiable analytics data have already been removed."
+  },
+  "49dfcee417a21393333ade717743419aede6d6ff534bf88150d1021aebacf315": {
+    "authorizes_deletion": false,
+    "language": "en",
+    "reason": "The request asks only to be removed from marketing lists and to keep receiving receipts and service messages, so it does not authorize deleting the account or data.",
+    "source": "model:claude-haiku",
+    "text": "Please remove me from marketing lists only. I still want receipts and service messages for this account."
+  },
+  "519765b04f059e5e827ec7c65c6b9cced2b695acaa4f37348f4d9e03634c1ef8": {
+    "authorizes_deletion": true,
+    "language": "ko",
+    "reason": "The request explicitly asks for permanent deletion of the account linked to the email address, along with review of current and former identifiers, which falls under erasure.",
+    "source": "model:claude-haiku",
+    "text": "이 이메일 주소에 연결된 계정의 영구 삭제를 요청합니다. 개인정보 처리 절차에 따라 현재 및 이전 식별자를 검토해 주세요. 검토가 완료되면 결과를 확인해 주세요."
+  },
+  "526523758a6cef72c182c2a85f513fa6c9cc156597b4eb1e4ef836105971d24e": {
+    "authorizes_deletion": true,
+    "language": "pt",
+    "reason": "The request explicitly asks for permanent deletion of the account associated with the email, and asks to verify current and previous identifiers and confirm the result, which is part of carrying out that deletion.",
+    "source": "model:claude-haiku",
+    "text": "Solicito a exclusão permanente da conta associada a este e-mail. Verifiquem os identificadores atuais e anteriores conforme o processo de privacidade. Por favor, confirmem o resultado quando a análise terminar."
+  },
+  "595c4ec93576f93dd98509f7868faeedb69d639a978c27b4893a15be8434559c": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The person asks for their name and contact details to be removed because they no longer need the account, which is an erasure request for personal data even though an internal reference may be kept.",
+    "source": "model:claude-haiku",
+    "text": "I no longer need this account. Please remove my name and contact details, but keeping an internal deleted-account reference is fine if other required records still depend on it."
+  },
+  "598cb9570c7bd2c4d5ba73b787ee54adb32db1edd8af06a22fbb083de586d470": {
+    "authorizes_deletion": false,
+    "language": "en",
+    "reason": "The request asks to replace an outdated phone number and keep the account active, which is a correction of details, not a deletion.",
+    "source": "model:claude-haiku",
+    "text": "The mobile number on my profile is out of date. Please replace it with the new one and leave the account active."
+  },
+  "5e9a2eb97fee27c6fc702c62b739a6768c6935256158e5abb4e6944d0a959322": {
+    "authorizes_deletion": false,
+    "language": "en",
+    "reason": "The request asks for help resetting a login and explicitly says not to close the account, so it does not authorize deletion.",
+    "source": "model:claude-haiku",
+    "text": "I can't access my profile and need help resetting the login. Do not close the account."
+  },
+  "69d20dacb67f801c64ad29b7e24b05268e5bc16a5ec45bce4a547ec13ae49a1c": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The requester is following up on their own deletion request and asks the shop to verify that their account is gone, which means the deletion must be carried out in full.",
+    "source": "model:claude-haiku",
+    "text": "Can you verify that my account was deleted? A search result with a similar email belongs to someone else, so please do not treat that record as mine."
+  },
+  "6b4eaab30d9ff20184f1ccd031442d0ef0a1ac1eff221fd1bfab2e3fd5259f40": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "This is a follow-up asking to verify that the account profile is gone and that remaining records cannot identify the person, which requires the deletion to be completed in full.",
+    "source": "model:claude-haiku",
+    "text": "I found an old report saying my account still existed. Please check the latest state and confirm that the profile is gone and that remaining records cannot identify me."
+  },
+  "6b95666432dc1fb6656b2889bded4e39af3cc85de2aa98b7109b824547a4f3db": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "This is a follow-up to an earlier deletion asking that remaining traces in search, support, and analytics be removed and synchronization that could recreate them be disabled.",
+    "source": "model:claude-haiku",
+    "text": "I was told the account had been deleted, but I can still find traces in search, support, and analytics. Please handle them and disable any synchronization that could recreate them."
+  },
+  "7589b67f96a0cc1d4c54f207961999ffe896d4389646e734266aae1197281257": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The request asks to remove the person's profile and to clean their personal details out of support conversations, which is a deletion of their account and personal data, with only the shared conversation itself retained.",
+    "source": "model:claude-haiku",
+    "text": "Please remove my profile and clean my personal details out of earlier support conversations. Some of those messages also relate to another customer, so the conversation itself may need to stay."
+  },
+  "799c8c081d61e85da6318e64cd6aae5be7090c9fec1900b355a0b5cd0d38df4a": {
+    "authorizes_deletion": false,
+    "language": "en",
+    "reason": "The request asks for a copy of invoices and explicitly asks to keep the profile and purchase history in place, so it does not authorize deletion.",
+    "source": "model:claude-haiku",
+    "text": "I need a copy of last year's invoices for my records. Please leave my profile and purchase history in place."
+  },
+  "902e3a41303cf3bd4c61897299573b3e931568e3de7240daa024fd19ae5cd751": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The user asks to close the account and remove the profile and attached personal details, which is a request for deletion of account data.",
+    "source": "model:claude-haiku",
+    "text": "Hi, I haven’t used this account in years and would like it closed. Please remove the profile and the personal details attached to it."
+  },
+  "96a952a09e469f00cd8cfcee81a8bb7dd76e99fe0dfd8d46c2794d204de6b41e": {
+    "authorizes_deletion": true,
+    "language": "fr",
+    "reason": "The request asks for permanent deletion of the account tied to the email address, including reviewing current and past identifiers, and confirming the outcome.",
+    "source": "model:claude-haiku",
+    "text": "Je demande la suppression définitive du compte associé à cette adresse e-mail. Veuillez examiner les identifiants actuels et antérieurs conformément à votre procédure de confidentialité. Merci de confirmer le résultat une fois la vérification terminée."
+  },
+  "9ee7f9ffc62dc8089089fa2ddbc172c9b6ac9e76b21c04101572ee1a9dbf9b02": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The person asks to remove all records linked to their old and current email addresses, which is a request to erase their personal data.",
+    "source": "model:claude-haiku",
+    "text": "I used this Yahoo address before changing the email on my account. Please remove records linked to both the old and current addresses."
+  },
+  "9effdd22fbce603713b2f77c8960b0e1313d7fb158be54f280de0c68e461e1ed": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The user asks for the data export file containing their personal data to be deleted, which is removal of a remaining copy of their data after closing the account.",
+    "source": "model:claude-haiku",
+    "text": "I closed my account, but an old “download your data” link still works. Please delete that export file as well."
+  },
+  "a33bd2e755a4535ba4183759396558a0f6ee5004312df3b334cc5a4a63582c2a": {
+    "authorizes_deletion": false,
+    "language": "en",
+    "reason": "The request asks for a copy of the account information and explicitly says not to delete or change anything, so it is an access request, not a deletion authorization.",
+    "source": "model:claude-haiku",
+    "text": "Could you send me a copy of the information held on my account? I still use it, so please don't delete or change anything."
+  },
+  "aff0a816031e2373cfce701021e961d68383c3542f9a0636c895e87183c4c1b5": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The person states they are deleting their account and asks that nothing in analytics still point back to them, which requests erasure of their personal data.",
+    "source": "model:claude-haiku",
+    "text": "I’m deleting my account. You can keep anonymous statistics, but nothing in analytics should still point back to me."
+  },
+  "b5dcbe3626620e59a68b161aedc8aded66f5f20183865cd70586f65e3ba3cb0f": {
+    "authorizes_deletion": true,
+    "language": "ja",
+    "reason": "The request explicitly asks for complete deletion of the account associated with the email address, so it authorizes deletion.",
+    "source": "model:claude-haiku",
+    "text": "このメールアドレスに関連するアカウントの完全な削除を依頼します。 プライバシー手続きに従い、現在および過去の識別情報を確認してください。 確認が完了したら結果をお知らせください。"
+  },
+  "c2654fd69d75d71525218b6f9ac977f19ff77a6c494007c7d90220479b87f606": {
+    "authorizes_deletion": false,
+    "language": "en",
+    "reason": "The request asks to change the account's email address and states the user wants to continue using the service, so it does not authorize deletion.",
+    "source": "model:claude-haiku",
+    "text": "Please change the email address used for this account. I want to continue using the service."
+  },
+  "c86605fe5218572ab6a2b10ce24ae72c67a98e104cf1bb2a814511bf2a85b651": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The requester is following up on an account deletion by asking that remaining personal details in an internal record be removed, keeping only a reference, which is a request to finish the deletion of their data.",
+    "source": "model:claude-haiku",
+    "text": "The account itself is gone, but an internal deleted-account record still shows my personal details. Please keep only the reference needed for retained records and remove the rest."
+  },
+  "cb8cd21217ee95bcc3f33898d24ed0cd6cb6b4363b4b952f62141560cf1e77e3": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "This is a follow-up to a deletion request that asks for confirmation that the account was fully removed, which the rules count as deletion.",
+    "source": "model:claude-haiku",
+    "text": "Please audit the deletion as it stood when my request was reviewed. I want confirmation that the account was fully removed at that point."
+  },
+  "cdd4c1c14773df32cbad9d5bdcfd4a27757ed7b75b9ad8ff804f7699d892d6e4": {
+    "authorizes_deletion": false,
+    "language": "en",
+    "reason": "The request asks for a portable copy of the account data and explicitly asks to keep the account as it is, so it is an export request with no deletion authorized.",
+    "source": "model:claude-haiku",
+    "text": "I'd like to download my account information in a portable format. Please keep the account as it is."
+  },
+  "dcb86a6dcc0945c71ffed714703dd01ad5a07261883e94d31213e0f2fa525d03": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The user is following up on a prior deletion request, stating the account and its search result still exist, and asks for the deletion to be investigated and finished, which matches the follow-up deletion category.",
+    "source": "model:claude-haiku",
+    "text": "I was told that deletion was complete, but the account and its search result can still be found. Please investigate and finish the deletion."
+  },
+  "e1bfdd0ba6d244ae02e84d108b97cb8cbe1f323a15d4e244e23c1ba692e6b67e": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The user is following up on their own account deletion and asks the shop to verify that the profile is gone and that any retained data is limited, which falls under the follow-up deletion category.",
+    "source": "model:claude-haiku",
+    "text": "I deleted my account and received the confirmation email. Could you verify that the profile is gone and that anything retained for security is limited to what is required?"
+  },
+  "ee97b3d731305d8020bfb46d043f1409b1c976d9fe5d379d24fe8324797c1b9b": {
+    "authorizes_deletion": false,
+    "language": "en",
+    "reason": "The request asks to stop promotional emails (marketing opt-out) and explicitly states the person wants to keep the account and order history, not delete them.",
+    "source": "model:claude-haiku",
+    "text": "Please stop the promotional emails. I still need the account and my order history, so I am not asking for deletion."
+  },
+  "f18ff8242d7eaab5773a0233ce2dfe5fceed757c3e63c9970e6bbd67c6a73214": {
+    "authorizes_deletion": false,
+    "language": "en",
+    "reason": "The request asks to correct a misspelled surname and explicitly asks not to remove any records, so it does not authorize deletion.",
+    "source": "model:claude-haiku",
+    "text": "My surname is misspelled on the account. Can you correct it without removing any of my records?"
+  },
+  "ff18629c6b1e65193ac30c3fd64a92d8c1e0f3a5327fb06ea78a58dbe1d8aa68": {
+    "authorizes_deletion": true,
+    "language": "en",
+    "reason": "The person says their account is already gone and asks to remove the remaining search result for their old profile, which is a follow-up to deletion that seeks removal of remaining personal data.",
+    "source": "model:claude-haiku",
+    "text": "My account page is gone, but my old profile still appears when I search for it. Can you remove that search result too?"
+  }
+}

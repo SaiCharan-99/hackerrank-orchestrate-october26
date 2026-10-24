@@ -1,0 +1,93 @@
+{
+  "agreement": true,
+  "detail_panel": {},
+  "disagreements": [],
+  "error": "",
+  "fallback_used": "pdf_text",
+  "file_id": "evidence_55",
+  "models": [
+    "claude-sonnet",
+    "bedrock/qwen.qwen3-vl-235b-a22b"
+  ],
+  "raw": {
+    "model_a": {
+      "detail_panel": {},
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "SECURITY_AUDIT_LOG",
+          "customer_reference": "user_03",
+          "email": null,
+          "email_hash": null,
+          "enabled": null,
+          "name": null,
+          "observed_at": "2026-08-25T04:03:00Z",
+          "phone": null,
+          "pointer": "journal entry record (Event reference)",
+          "present": true,
+          "redacted": null,
+          "resource_id": "audit_record_003",
+          "restore_allowed": null,
+          "status_text": "Valid"
+        }
+      ]
+    },
+    "model_b": {
+      "detail_panel": {
+        "Journal partition": "2026-Q3",
+        "actor": "automated account workflow",
+        "classification": "Internal Restricted",
+        "event": "Account closure recorded",
+        "integrity seal": "valid",
+        "issued": "05 Sep 2026 06:30 UTC",
+        "record version": "1",
+        "recorded": "25 Aug 2026 04:03 UTC",
+        "reference": "CJX-20260905-0630",
+        "retain until": "25 Aug 2027 04:03 UTC",
+        "short fingerprint": "8f0c\u202631ad",
+        "storage class": "compliance-ledger",
+        "subject reference": "user_03"
+      },
+      "rows": [
+        {
+          "anonymized": null,
+          "category": "SECURITY_AUDIT_LOG",
+          "customer_reference": "user_03",
+          "email": null,
+          "email_hash": null,
+          "enabled": null,
+          "name": null,
+          "observed_at": "2026-08-25T04:03:00Z",
+          "phone": null,
+          "pointer": "Record Event",
+          "present": true,
+          "redacted": null,
+          "resource_id": "audit_record_003",
+          "restore_allowed": null,
+          "status_text": "Account closure recorded"
+        }
+      ]
+    },
+    "source": "pdf_text"
+  },
+  "rows": [
+    {
+      "anonymized": null,
+      "category": "SECURITY_AUDIT_LOG",
+      "customer_reference": "user_03",
+      "email": null,
+      "email_hash": null,
+      "enabled": null,
+      "name": null,
+      "observed_at": "2026-08-25T04:03:00Z",
+      "phone": null,
+      "pointer": "journal entry record (Event reference)",
+      "present": true,
+      "redacted": null,
+      "resource_id": "audit_record_003",
+      "restore_allowed": null,
+      "status_text": "Valid"
+    }
+  ],
+  "version": 2
+}
