@@ -19,7 +19,7 @@ Design reference: `APPROACH.md`. Output contract: `AGENTS.md` §6. Phase prompts
 | Phase | Name | Status | Exit gate |
 |---|---|---|---|
 | 0 | Scaffold, loader, model probe | DONE | `python code/main.py --counts` prints table counts; `python code/tools/list_models.py` lists gateway models |
-| 1 | Identity graph | TODO | all 518 request emails resolve to a `user_id`; `--subject` prints sample subjects with account ids |
+| 1 | Identity graph | DONE | all 518 request emails resolve to a `user_id`; `--subject` prints sample subjects with account ids |
 | 2 | Text evidence parsers (SQL / JSON / logs / txt) | TODO | every sample finding and verification resource is found in the cited file at ≤ `audit_at` |
 | 3 | State engine + local grader | TODO | `--grade` reports 32/32 exact sample matches |
 | 4 | Vision extraction + intent classifier + triage | TODO | vision agreement pass clean; `NOT_APPLICABLE` set agrees with `CLASSIFY_REQUEST` activities |
@@ -59,6 +59,14 @@ Files created: `code/main.py` (was empty), `code/ghost/__init__.py`, `code/ghost
 `code/ghost/load.py`, `code/ghost/prompts/__init__.py`, `code/cache/.gitkeep`. Unchanged:
 `code/tools/list_models.py` (already met spec), `code/evaluation/main.py` (kept, empty).
 
+## Phase 1 summary (DONE 2026-10-25)
+
+`code/ghost/identity.py` builds one `Subject` per user_id from identities and audit_log history (email,
+phone, email_hash old+new), plus sha256 of every known email; `IdentityIndex` resolves by exact
+email / hash / phone digits only. All 518 request emails resolve (418 current, 100 historical, 0 ambiguous).
+0/32 sample account ids are linkable from activity (only 12 LINK_RESOURCE_IDENTITY rows, 1 account): Phase 2 input.
+Files: created `code/ghost/identity.py`; changed `code/main.py` (`--subject`, `--identity-check`).
+
 ## Decisions and parameters
 
 - P0: CSVs read with `dtype=str, keep_default_na=False` so empty identifiers stay `""` (never NaN) and ids are never coerced.
@@ -68,12 +76,26 @@ Files created: `code/main.py` (was empty), `code/ghost/__init__.py`, `code/ghost
 
 ## Open issues
 
+- P1: 0/32 sample account ids linkable from activity; Phase 2 evidence parsers must call `Subject.add_resource`
+  with `customer_reference` / `subject_reference` / `lookup_key=user_N` matches, then `IdentityIndex.reindex()`.
+- P1: identity history is not yet time-filtered; LINK activity_4000 is dated 2026-09-26, so Phase 3 must
+  ignore links and evidence after `audit_at` when choosing resources and citations.
+
 - P0: first cold `--counts` run took 5.4 s (pandas import cold cache); warm runs 1.6 s. Not a blocker.
 
+## Decisions and parameters (P1)
+
+- P1: resolution requires a unique owner; an identifier shared by >1 user returns None (0 such emails today).
+- P1: LINK_RESOURCE_IDENTITY attaches the activity `resource_id` only if the named user_N exists and every email in details belongs to that user.
+- P1: `account_ids` is the `account_*` subset of `resource_ids`; `sources` maps each value to its origin refs (`identities`, `audit_log:<audit_id>`, `activity LINK_RESOURCE_IDENTITY:<activity_id>`, `sha256(<email>)`).
+- P1: recorded email_hash equals sha256(lower(email)) (checked on samples), so computed hashes are safe to match.
+
 ## Diagnosis log (signal → cause → change)
+
+- P1: none (no fixes; all checks matched first run).
 
 (append per tuning iteration; this is what the judges asked for)
 
 ## Next step
 
-Phase 1 (Identity graph).
+Phase 2 (Text evidence parsers): feed account/resource links into `Subject.add_resource`.
