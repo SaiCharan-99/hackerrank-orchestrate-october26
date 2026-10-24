@@ -446,3 +446,115 @@ branch=main
 repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-24T21:24:00Z] SESSION START
+
+tool=Claude Code
+model=claude-opus-5-5
+Repo Root: C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+Branch: main
+Worktree: main
+Parent Agent: none
+Language: py
+Time Remaining: not configured
+
+## [2026-10-24T21:43:00Z] Phase 4 vision extraction, intent classifier, triage
+
+User Prompt (verbatim, secrets redacted):
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+
+Implement code/ghost/llm.py: OpenAI-compatible client from config. Read the gateway facts in
+progress.md first: never send temperature to Claude; send images only through client.responses.create
+(input_text + input_image data URL); text-only calls may use chat.completions. Retry with exponential backoff
+on 429/5xx (max 5); every call appends provider, model, prompt tokens, completion tokens, latency,
+estimated cost to code/cache/usage_log.jsonl; budget guard stops when LLM_BUDGET_USD is reached;
+structured output enforced with pydantic: on validation failure re-ask with the error and only the
+failing fields, max 2 retries, then mark extraction_failed.
+code/ghost/prompts/vision.py, intent.py, triage.py hold prompt strings (code judge ignores .json).
+vision.py: for each PNG and PDF in the manifest, extract every visible record row into EvidenceRow
+shape plus detail-panel fields. Run model A and model B (different families); diff; third pass on
+disagreement with both outputs shown; cache per file_id under code/cache/vision/. PDFs try pypdf
+text first; vision only when text is empty. Policy if extraction cannot run: file yields no rows,
+affected cases flagged in notes.
+intent.py: keyword pre-filter decides unambiguous deletion texts without a call; the model
+classifies the rest into {authorizes_deletion: bool, reason, language}. Cache by sha256 of text.
+Cross-check against CLASSIFY_REQUEST activities (non-deletion account ids) and print disagreements.
+triage.py: bounded step per case. Input: candidate rows with partial or conflicting identifiers
+plus audit_at. Output per row: include | exclude | needs_recheck with reason, and optional
+(resource_id, alternative_file_id) re-check requests. The model cannot add resources or change
+states. Deterministic fallback excludes ambiguous rows and flags the case.
+Triage must NOT be asked to pick between tied accounts or tied analytics records (progress.md
+P2b-verifier: those ties carry no information; an LLM would guess). Keep the deterministic tentative
+choice. Instead, after vision rows are added to the EvidenceIndex, re-run discovery so new
+account<->email links from console screenshots (account_admin_console, deleted_account_reference,
+security_audit_explorer, etc.) can turn tentative choices into evidence-owned ones; print how many
+ambiguous cases were resolved by vision rows.
+Vision rows must carry file_captured_at from evidence_files.csv and join the index exactly like text
+rows so latest_at / absence-by-omission / citation logic needs no special cases. Expected closures:
+case_07 (support_001 via evidence_58 PDF); possibly case_18 / case_20 if a screenshot lists
+audit_record_6645 / audit_record_5569.
+Gateway rules (verified): never send temperature to Claude; images only via client.responses.create
+with input_text + input_image data URL (chat.completions silently drops images); text-only calls may
+use chat.completions. On HTTP 400 check these two first.
+Add main.py --dry-run-cost, --extract-vision, --classify-intent, --refresh-cache.
+Checks: --dry-run-cost; then extraction and classification; print agreement rate, failed items,
+NOT_APPLICABLE list with reasons, and the intent/activity cross-check. Re-run --discovery (ambiguous
+count before/after vision rows) and --grade: target 26/32 or better; the remaining failures must be
+only the documented ties (case_03 analytics, case_23/28/29 accounts) and any audit record that
+appears in no participant file. Print the usage ledger totals (calls, tokens, est. cost per model).
+
+Agent Response Summary:
+Built llm.py (no temperature, images via responses.create, retry/backoff, usage ledger, budget guard, pydantic re-ask of failing fields), vision/PDF extraction with Sonnet + Qwen3-VL agreement and a third reconcile pass, the intent classifier with keyword pre-filter and activity cross-check, and bounded triage with a deterministic fallback; prompts live in code/ghost/prompts/*.py. Vision A/B agreement 8/15 files (7 reconciled), 0 failed; 10 NOT_APPLICABLE with 0 disagreements against the 10 CLASSIFY_REQUEST activities; triage found 0 candidate rows (no contested or name-only rows exist). --grade 26/32 (case_07 closed); remaining failures are the documented ties (case_03/23/28/29) plus case_18/20 whose audit records appear in no participant file; vision rows resolved 0 ambiguous accounts. Ledger: 182 calls, 245,695 prompt / 50,875 completion tokens, est. $0.97.
+
+Actions:
+* Created code/ghost/llm.py, code/ghost/intent.py, code/ghost/triage.py, code/ghost/evidence/vision.py, code/ghost/prompts/{vision,intent,triage}.py
+* Edited code/main.py (new flags; _audits/--discovery/--coverage/--evidence use cached vision rows, intents, triage), progress.md
+* Ran python code/main.py --dry-run-cost, --extract-vision (twice, second with --refresh-cache), --classify-intent (twice, second with --refresh-cache), --triage, --discovery, --grade, --coverage, --usage
+
+Diagnosis: --classify-intent crashed with Bedrock 400 "text content blocks must be non-empty" -> an empty first reply was re-sent as an empty assistant turn in the schema re-ask -> re-ask fresh when the previous reply is empty and map other 4xx to ExtractionFailed.
+Diagnosis: 5 sample cases (case_06/21/25/27/28) classified NOT_APPLICABLE though all samples authorize deletion -> prompt read verify/clean-up follow-ups as status questions -> prompt says follow-ups to finish, verify or clean up one's own deletion authorize deletion (NA 15 -> 10, 0 cross-check disagreements).
+Diagnosis: case_07 support_001 graded REDACT instead of DELETE -> vision rows used the support_ prefix default SUPPORT_MESSAGE though evidence_58 is an uploaded attachment -> model emits a validated category and merge prefers SUPPORT_ATTACHMENT (25 -> 26/32).
+Diagnosis: support_9538 emitted 3 times by the reconcile pass -> no per-resource merge -> merge vision rows by resource_id.
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=main
+repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
+
+## [2026-10-24T21:50:00Z] Commit Phase 4 changes
+
+User Prompt (verbatim, secrets redacted):
+Commit the Phase 4 changes, including the code/cache files, with a sensible message.
+
+Agent Response Summary:
+Checked code/cache for secrets (none), then committed the Phase 4 code, prompts, caches (vision, intent, triage, usage ledger) and progress.md on main as d0fa83c, then committed log.txt including this entry. Not pushed.
+
+Actions:
+* git add code progress.md; git commit (d0fa83c); git add log.txt; git commit
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=main
+repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
