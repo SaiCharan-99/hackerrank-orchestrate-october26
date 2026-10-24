@@ -1,13 +1,15 @@
 # Phase prompts — Ghost Data Still Exists
 
 **Session protocol.** Every phase runs in a *new* agent session started from the repository root.
-Paste the preamble followed by exactly one phase block. Because the session is fresh, the agent has
+Paste exactly one phase block; each block is self-contained (the session preamble is already inlined at the top of every block). Because the session is fresh, the agent has
 no memory of earlier phases: `AGENTS.md`, `APPROACH.md`, `progress.md`, and `log.txt` are the only
 hand-off. Logging to `log.txt` starts with Phase 0 and is mandatory for every phase session: the
 agent appends the `AGENTS.md` §5.1 `SESSION START` entry before any work and the §5.2 per-turn
 entry after every user message. Phase planning before Phase 0 was intentionally not logged.
 
-## Preamble (prepend to every phase prompt)
+---
+
+## Phase 0 — Scaffold, loader, model probe
 
 ```text
 You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
@@ -26,13 +28,8 @@ cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry 
 the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
 populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
 open, which phase block to paste next.
-```
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
 
----
-
-## Phase 0 — Scaffold, loader, model probe
-
-```text
 Create the package layout: code/main.py (CLI entry), code/ghost/__init__.py, code/ghost/config.py
 (loads .env via python-dotenv; exposes LLM_BASE_URL, LLM_API_KEY presence flag, role model ids,
 budget), code/ghost/load.py, code/ghost/prompts/__init__.py, code/tools/list_models.py,
@@ -58,6 +55,24 @@ Expected counts: 518 requests, 32 samples, 850 identities, 306 audit rows, 4011 
 ## Phase 1 — Identity graph
 
 ```text
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+
 Implement code/ghost/identity.py:
 - Subject dataclass: user_id, name, emails (set, lower-cased, stripped), phones (set, digits only),
   email_hashes (set; include sha256 of every known email as well as recorded hashes), account_ids
@@ -81,6 +96,24 @@ a Phase 2 input (evidence rows also carry customer_reference).
 ## Phase 2 — Text evidence parsers
 
 ```text
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+
 Implement code/ghost/evidence/ with base.py (EvidenceRow pydantic model: file_id, captured_at,
 system_id, resource_id, category, present: bool|None, identifiers dict {email,name,phone,
 email_hash,customer_reference}, flags dict {enabled, restore_allowed, anonymized, redacted,
@@ -113,7 +146,24 @@ samples).
 ## Phase 2b — Account discovery
 
 ```text
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
 Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+
 Phase 2 built the parsers and EvidenceIndex but did not build account discovery. This phase builds it.
 ACCOUNT DISCOVERY (verified finding, highest-risk part of the problem). Every canonical answer names the
 subject's account_* id, but the account row in evidence usually carries NO identifier (404 / profile
@@ -155,6 +205,24 @@ again to confirm nothing regressed.
 ## Phase 3 — State engine + local grader
 
 ```text
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+
 Implement code/ghost/engine.py and code/ghost/grade.py, following APPROACH.md §2.5 and §3.5 exactly.
 engine.py: CaseAudit dataclass {case_id, subject, resources, findings, remediations, verifications,
 status, notes}. audit_case(request, subjects, evidence_index, rules, activity) -> CaseAudit.
@@ -178,7 +246,24 @@ Diagnosis log line.
 ## Phase 3b — Discovery fix: orphan accounts and unchosen cases (verifier finding)
 
 ```text
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
 Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+
 Verifier diagnosis (signal -> cause -> change) to implement and record in the Diagnosis log:
 Signal: on the full 518-case run, 18 cases end with discovery.chosen_account=None (reason "every candidate taken
 by another subject; left unchosen"), so they emit no account_service verification step; case_53 is COMPLETE with
@@ -206,6 +291,24 @@ many of the 18 previously unchosen cases now have an account and how many previo
 ## Phase 4 — Vision extraction, intent classifier, triage
 
 ```text
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+
 Implement code/ghost/llm.py: OpenAI-compatible client from config. Read the gateway facts in
 progress.md first: never send temperature to Claude; send images only through client.responses.create
 (input_text + input_image data URL); text-only calls may use chat.completions. Retry with exponential backoff
@@ -226,14 +329,48 @@ triage.py: bounded step per case. Input: candidate rows with partial or conflict
 plus audit_at. Output per row: include | exclude | needs_recheck with reason, and optional
 (resource_id, alternative_file_id) re-check requests. The model cannot add resources or change
 states. Deterministic fallback excludes ambiguous rows and flags the case.
+Triage must NOT be asked to pick between tied accounts or tied analytics records (progress.md
+P2b-verifier: those ties carry no information; an LLM would guess). Keep the deterministic tentative
+choice. Instead, after vision rows are added to the EvidenceIndex, re-run discovery so new
+account<->email links from console screenshots (account_admin_console, deleted_account_reference,
+security_audit_explorer, etc.) can turn tentative choices into evidence-owned ones; print how many
+ambiguous cases were resolved by vision rows.
+Vision rows must carry file_captured_at from evidence_files.csv and join the index exactly like text
+rows so latest_at / absence-by-omission / citation logic needs no special cases. Expected closures:
+case_07 (support_001 via evidence_58 PDF); possibly case_18 / case_20 if a screenshot lists
+audit_record_6645 / audit_record_5569.
+Gateway rules (verified): never send temperature to Claude; images only via client.responses.create
+with input_text + input_image data URL (chat.completions silently drops images); text-only calls may
+use chat.completions. On HTTP 400 check these two first.
 Add main.py --dry-run-cost, --extract-vision, --classify-intent, --refresh-cache.
 Checks: --dry-run-cost; then extraction and classification; print agreement rate, failed items,
-NOT_APPLICABLE list with reasons, and the intent/activity cross-check. Re-run --grade: 32/32.
+NOT_APPLICABLE list with reasons, and the intent/activity cross-check. Re-run --discovery (ambiguous
+count before/after vision rows) and --grade: target 26/32 or better; the remaining failures must be
+only the documented ties (case_03 analytics, case_23/28/29 accounts) and any audit record that
+appears in no participant file. Print the usage ledger totals (calls, tokens, est. cost per model).
 ```
 
 ## Phase 5 — Full run + validator
 
 ```text
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+
 Implement code/ghost/output.py: validate (518 rows, natural sort by case_id, exact header, valid
 JSON, exact seven keys per step, consecutive step_no, phase monotonic, allowed operation/state
 pairs, evidence rules per status, status consistent with findings, every remediation has a
@@ -248,6 +385,24 @@ Checks: python code/main.py ; python code/main.py --audit (exit 0). Paste head -
 ## Phase 6 — Evaluation reports, custom and adversarial cases
 
 ```text
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+
 Create code/evaluation/custom_cases/ with at least five hand-authored cases, each a small
 request row plus a synthetic evidence file and an expected steps list: historical-email
 resolution; replica drift; evidence dated after audit_at that must be ignored; tombstone with
@@ -266,6 +421,24 @@ Checks: --grade-custom all pass; both reports contain numbers that match the pri
 ## Phase 7 — README, packaging
 
 ```text
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+
 Rewrite README.md "How to run" for this solution: Python 3.11+, pip install -r requirements.txt,
 copy .env.example to .env, python code/main.py (cache makes it zero-call), --refresh-cache for a
 live re-extraction, every debug command. Confirm no secrets in the tree (grep for the key prefix
