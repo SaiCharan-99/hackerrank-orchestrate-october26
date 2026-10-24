@@ -1,0 +1,49 @@
+## [2026-10-24T20:10:22Z] SESSION START
+
+tool=Claude Code
+model=claude-opus-5-5
+Repo Root: C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+Branch: main
+Worktree: main
+Parent Agent: none
+Language: py
+Time Remaining: not configured
+
+## [2026-10-24T20:11:59Z] Phase 0: scaffold, loader, counts CLI, model probe
+
+User Prompt (verbatim, secrets redacted):
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
+
+Agent Response Summary:
+Executed Phase 0 from prompts.md. Created the code/ghost package (config, load, prompts), the --counts CLI in code/main.py, and code/cache/.gitkeep; kept the existing list_models.py and evaluation/main.py. --counts reproduces every expected count (518 requests, 850 identities, 72 audit_at, 418 current / 100 historical emails) and list_models.py lists 72 gateway models. progress.md updated with Phase 0 DONE and Next step Phase 1.
+
+Actions:
+* Created code/ghost/__init__.py, code/ghost/config.py, code/ghost/load.py, code/ghost/prompts/__init__.py, code/cache/.gitkeep; wrote code/main.py
+* Ran python code/main.py --counts; python code/tools/list_models.py
+* Edited progress.md; appended log.txt
+
+Diagnosis: none (no fixes needed; all counts matched on first run)
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=main
+repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
+

@@ -18,7 +18,7 @@ Design reference: `APPROACH.md`. Output contract: `AGENTS.md` §6. Phase prompts
 
 | Phase | Name | Status | Exit gate |
 |---|---|---|---|
-| 0 | Scaffold, loader, model probe | TODO | `python code/main.py --counts` prints table counts; `python code/tools/list_models.py` lists gateway models |
+| 0 | Scaffold, loader, model probe | DONE | `python code/main.py --counts` prints table counts; `python code/tools/list_models.py` lists gateway models |
 | 1 | Identity graph | TODO | all 518 request emails resolve to a `user_id`; `--subject` prints sample subjects with account ids |
 | 2 | Text evidence parsers (SQL / JSON / logs / txt) | TODO | every sample finding and verification resource is found in the cited file at ≤ `audit_at` |
 | 3 | State engine + local grader | TODO | `--grade` reports 32/32 exact sample matches |
@@ -50,13 +50,25 @@ Design reference: `APPROACH.md`. Output contract: `AGENTS.md` §6. Phase prompts
   - `python-dotenv`: call `load_dotenv(REPO_ROOT / ".env")` with an explicit path; bare `load_dotenv()`
     fails under heredoc/stdin execution on this machine.
 
+## Phase 0 summary (DONE 2026-10-25)
+
+Package scaffold built; `load_all()` returns a frozen `Dataset` of 9 DataFrames (all read as str,
+timestamps parsed UTC). `--counts` matches every expected number (518/32/850/306/4011/15/94, 72
+distinct audit_at, 418 current / 100 historical / 0 unresolved). Gateway probe lists 72 models.
+Files created: `code/main.py` (was empty), `code/ghost/__init__.py`, `code/ghost/config.py`,
+`code/ghost/load.py`, `code/ghost/prompts/__init__.py`, `code/cache/.gitkeep`. Unchanged:
+`code/tools/list_models.py` (already met spec), `code/evaluation/main.py` (kept, empty).
+
 ## Decisions and parameters
 
-(append per phase)
+- P0: CSVs read with `dtype=str, keep_default_na=False` so empty identifiers stay `""` (never NaN) and ids are never coerced.
+- P0: `dataset/output.csv` template has 0 rows, so row order falls back to `natural_case_key` (text/int runs).
+- P0: `config.py` exposes only `has_api_key`; the raw key is reachable solely via `config.api_key()` for client construction.
+- P0: role model defaults mirror `.env.example` (vision `claude-sonnet`, vision B `bedrock/qwen.qwen3-vl-235b-a22b`, text `claude-haiku`, triage `claude-sonnet`, budget $10).
 
 ## Open issues
 
-(append per phase)
+- P0: first cold `--counts` run took 5.4 s (pandas import cold cache); warm runs 1.6 s. Not a blocker.
 
 ## Diagnosis log (signal → cause → change)
 
@@ -64,4 +76,4 @@ Design reference: `APPROACH.md`. Output contract: `AGENTS.md` §6. Phase prompts
 
 ## Next step
 
-Phase 0.
+Phase 1 (Identity graph).
