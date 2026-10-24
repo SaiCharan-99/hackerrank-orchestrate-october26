@@ -27,7 +27,7 @@ Design reference: `APPROACH.md`. Output contract: `AGENTS.md` §6. Phase prompts
 | 4 | Vision extraction + intent classifier + triage | DONE | vision agreement pass clean; `NOT_APPLICABLE` set agrees with `CLASSIFY_REQUEST` activities |
 | 5 | Full run + validator | DONE | `output.csv` 518 rows, validator PASS, zero future-evidence citations |
 | 6 | Evaluation reports + custom/adversarial cases | DONE | `code/evaluation/evaluation_report.md` and `usage_report.md` filled from grader/ledger output |
-| 7 | README, interview checklist, code.zip | TODO | zip = `README.md` + `code/`, no dataset/.env/log; clean run from a fresh unzip |
+| 7 | README, interview checklist, code.zip | DONE | zip = `README.md` + `code/`, no dataset/.env/log; clean run from a fresh unzip |
 
 ## Fixed facts (do not re-derive)
 
@@ -122,6 +122,21 @@ remediation -> finding + verification, no citation after audit_at, NOT_APPLICABL
 runs the cached pipeline (0 LLM calls; ledger unchanged at 182) and validates: PASS. `--audit` re-reads the file: PASS,
 determinism match, harm signals 0.000 / 0.012 / 0.467 / 0; status 153 C / 355 I / 10 NA vs samples 10 / 22 / 0.
 Files: created `code/ghost/output.py`, `output.csv`; changed `code/main.py` (default run, `--audit`).
+
+## Phase 7 summary (DONE 2026-10-25)
+
+README.md rewritten for the solution (architecture, How to run, every debug command, sample metrics with the command
+behind each, known limits). `code/evaluation/main.py` now runs --grade, --grade-custom, --audit (EVALUATION: PASS).
+code.zip = README.md + code/ (72 files, 120,744 bytes); a fresh unzip + dataset/ + empty-key .env reproduces output.csv
+byte-identically (sha256 f4efeed8...d221, ledger 183 -> 183 lines, 0 calls). Secret scan clean.
+Files: changed `README.md`, `code/evaluation/main.py`; created `code/requirements.txt`, `code/.env.example` (copies), `code.zip`.
+
+## Decisions and parameters (P7)
+
+- P7: zip holds README.md + code/ only, so requirements.txt and .env.example are duplicated into code/ for a fresh unzip.
+- P7: zip built by a Python zipfile script (skips __pycache__/.venv/.git/.env and nested archives), not Compress-Archive.
+- P7: the wrapper enforces exit 0 only for --grade-custom and --audit; --grade has 6 known mismatches by design.
+- P7: README names only model ids present in usage_report.md (checked by grep loop).
 
 ## Phase 6 summary (DONE 2026-10-25)
 
@@ -218,6 +233,10 @@ pipeline/custom split with per-request averages), `code/ghost/intent.py` (`purpo
 - P0: role model defaults mirror `.env.example` (vision `claude-sonnet`, vision B `bedrock/qwen.qwen3-vl-235b-a22b`, text `claude-haiku`, triage `claude-sonnet`, budget $10).
 
 ## Open issues
+
+- P7: log.txt has 11 SESSION START entries for 10 phase sessions: Phase 5 has two (21:48:15 and 21:48:23, retry after a
+  failed printf), and Phase 4's start (21:24) is logged after Phase 3b's entries. Log is append-only, so left as is.
+- P7: "[...]" elisions exist only in the Phase 1 and Phase 2 prompt entries (log lines 65-66, 119-120); none after Phase 2.
 
 - P6: costs are estimates from `llm.PRICES`; gateway invoice pricing was not available to confirm them.
 - P6: custom cases cover text/SQL formats only; image-side OCR risks are documented from Phase 4 probes, not as a custom case.
@@ -319,6 +338,9 @@ pipeline/custom split with per-request averages), `code/ghost/intent.py` (`purpo
 
 ## Diagnosis log (signal → cause → change)
 
+- P7: README "pip install -r requirements.txt" / "copy .env.example" would fail in a fresh unzip -> both files live at the
+  repo root, outside the README.md + code/ zip -> copied them into code/ and documented the code/ paths.
+
 - P6: SyntaxError (unterminated string) in main.py after a scripted edit -> the bash heredoc turned the Python source `\n`
   into a real newline -> rewrote those lines with the file editor (no escapes) and re-ran the commands.
 - P6: ledger mixed one custom-case call with the 182 pipeline calls -> usage report must describe only the run behind
@@ -388,5 +410,5 @@ pipeline/custom split with per-request averages), `code/ghost/intent.py` (`purpo
 
 ## Next step
 
-Phase 7 (README, packaging): README setup/run instructions, code.zip = README.md + code/ (no dataset/.env/log), clean run
-from a fresh unzip. Paste the prompts.md "Phase 7" block.
+All phases DONE. Submit: output.csv, code.zip, log.txt (chat_transcript) at
+https://www.hackerrank.com/contests/hackerrank-orchestrate-october26/challenges/ghost-data-still-exists

@@ -707,3 +707,73 @@ branch=main
 repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-24T22:09:58Z] SESSION START
+
+tool=Claude Code
+model=claude-opus-5-5
+Repo Root: C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+Branch: main
+Worktree: main
+Parent Agent: none
+Language: py
+Time Remaining: not configured
+
+## [2026-10-24T22:14:42Z] Phase 7 README, evaluation wrapper, code.zip, fresh-unzip proof
+
+User Prompt (verbatim, secrets redacted):
+You are continuing the Ghost Data Still Exists build in this repo. This is a fresh session: first
+follow AGENTS.md §3 (append the §5.1 SESSION START entry to log.txt with exact tool= and model=
+values, give the greeting). Then read in full: AGENTS.md, APPROACH.md, progress.md, the last two
+entries of log.txt, and the section of prompts.md for this phase only. Check
+progress.md and confirm every earlier phase is marked DONE; if one is not, stop and tell me instead of
+continuing. Then execute this phase exactly as specified. Constraints: do not modify anything under
+dataset/. Never hardcode case ids, user ids, resource ids, or statuses. Never read or print the value
+of LLM_API_KEY. Use only participant-facing files under dataset/. Keep every function deterministic
+and pure where possible. Resolve all paths relative to the repository root. When finished: (1) run
+the checks named in this phase and paste their output to me; (2) update progress.md: set this phase
+to DONE with a 2-4 line summary, list files created or changed, record decisions under "Decisions
+and parameters", add open issues, add a "Diagnosis log" line for every fix of the form "signal ->
+cause -> change", and set "Next step"; (3) append the AGENTS.md §5.2 log entry to log.txt, including a "Diagnosis:" line for each fix in
+the form "signal -> cause -> change", and verify the entry has exactly one populated tool= and one
+populated model= line. (4) End with a 3-line hand-off for the next session: what is DONE, what is
+open, which phase block to paste next.
+Log the user prompt verbatim in log.txt; do not elide it with "[...]".
+
+Rewrite README.md "How to run" for this solution: Python 3.11+, pip install -r requirements.txt,
+copy .env.example to .env, python code/main.py (cache makes it zero-call), --refresh-cache for a
+live re-extraction, every debug command. Confirm no secrets in the tree (grep for the key prefix
+pattern and for LLM_API_KEY= with a value). Build code.zip containing README.md and code/ only
+(exclude __pycache__, .env, dataset/, log.txt). Verify output.csv has 519 lines and --audit passes.
+Also: (a) replace the empty starter code/evaluation/main.py with a thin wrapper that runs the grader,
+the custom cases and the audit (python code/evaluation/main.py == --grade + --grade-custom + --audit) so
+the starter path the README names does something useful; (b) prove the fresh-unzip run: extract code.zip
+into a temp directory, copy dataset/ next to it, run `python code/main.py` there with a .env that has an
+EMPTY key, and confirm output.csv is byte-identical to the repo's (cached run, zero calls); (c) README
+must state the sample metrics, the known limits (account ties, missing audit records) and the exact
+commands behind every number, and must not mention any model id that is not in usage_report.md;
+(d) confirm log.txt has one SESSION START per phase session and no "[...]" elisions after Phase 2.
+List final files with sizes. Mark Phase 7 DONE.
+
+Agent Response Summary:
+Confirmed phases 0-6 DONE. Rewrote README.md for the solution (architecture, How to run, every debug command, sample
+metrics with the command behind each, known limits; only model ids from usage_report.md) and replaced the empty
+code/evaluation/main.py with a wrapper running --grade, --grade-custom, --audit (EVALUATION: PASS). Secret scan clean;
+built code.zip (README.md + code/, 72 files); a fresh unzip with dataset/ and an empty-key .env produced a byte-identical
+output.csv (519 lines, zero calls, ledger unchanged). Log check: no elisions after Phase 2; Phase 5 has a duplicate
+SESSION START (append-only, recorded as an open issue).
+
+Diagnosis: README pip/.env.example steps would fail in a fresh unzip -> requirements.txt and .env.example live outside the README.md + code/ zip -> copied both into code/ and documented the paths.
+
+Actions:
+* edited README.md, code/evaluation/main.py, progress.md (Phase 7 DONE)
+* created code/requirements.txt, code/.env.example (copies), code.zip
+* ran secret grep scan; python code/evaluation/main.py; python code/main.py --audit; fresh-unzip run in scratchpad with cmp/sha256
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=main
+repo_root=C:\Users\gobbu\Documents\hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

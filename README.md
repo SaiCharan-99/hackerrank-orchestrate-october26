@@ -1,157 +1,130 @@
-# HackerRank Orchestrate - October 2026
+# Ghost Data Still Exists — deletion-audit agent
 
-## Ghost Data Still Exists
+HackerRank Orchestrate, October 2026. For each request in `dataset/deletion_requests.csv` the agent decides
+whether deletion was actually requested, rebuilds the subject's current and historical identifiers, finds every
+copy of their data in the supplied evidence as it stood at `audit_at`, applies `dataset/deletion_rules.csv`, and
+writes `output.csv` (`case_id,deletion_status,steps_json`) with findings, ordered remediation and verification.
 
-Build an AI agent that audits whether a user's personal data was actually deleted.
+Challenge: https://www.hackerrank.com/contests/hackerrank-orchestrate-october26/challenges/ghost-data-still-exists
 
-A deletion workflow may report **Complete** while data still exists in databases, logs, support attachments, exports, search indexes, archives, or backups. Sync and restore processes may also bring deleted data back.
+## Architecture (one line per module, all under `code/ghost/`)
 
-For each request, the agent must first determine whether deletion was actually requested. It then returns `COMPLETE`, `INCOMPLETE`, or `NOT_APPLICABLE`, reports any remaining data or recreation risk, and produces the ordered remediation and verification steps required to finish an authorized deletion safely.
+| Module | Role |
+|---|---|
+| `load.py`, `config.py` | Read every participant-facing CSV as strings; paths relative to the repo root; `.env` config |
+| `identity.py` | One subject per `user_id`: current + historical email/phone/hash from `user_audit_log.csv` |
+| `evidence/` | Parsers for SQL snapshots (replica drift), JSON exports, logs, text, and cached PNG/PDF extraction |
+| `discovery.py` | Ties each request to its account and footprint (evidence ownership, activity window, elimination) |
+| `intent.py` | Does the request text authorize deletion? Keyword pre-filter, else an LLM classifier (cached) |
+| `engine.py` | State at `audit_at` per resource, rule application, findings → remediation → verification |
+| `output.py` | Writer + validator for the output contract; `--audit` harm signals |
+| `llm.py`, `prompts/` | OpenAI-compatible gateway client, usage ledger, budget guard; prompts as Python strings |
+| `grade.py`, `custom_cases.py` | Local grader for the 32 samples and the 9 custom/adversarial cases |
 
-Read [`problem_statement.md`](./problem_statement.md) for the complete challenge contract.
+Models are used only for PNG/PDF extraction (two model families plus a reconciler) and for ambiguous request
+intent. Everything else is deterministic Python. All model results are cached in `code/cache/`, so the default
+run makes zero model calls and is byte-for-byte reproducible.
 
----
+## How to run
 
-## Quick Start
-
-Clone the repository and move into the project directory:
-
-```bash
-git clone https://github.com/interviewstreet/hackerrank-orchestrate-october26.git
-cd hackerrank-orchestrate-october26
-```
-
-Start your AI coding tool from the **repository root** so it automatically reads [`AGENTS.md`](./AGENTS.md) and logs your session turns to `log.txt` in the root directory.
-
-Build your solution in `code/main.py`, or use another language and document its setup and run command clearly in your README.
-
-Your solution must:
-
-- Read the input files from `dataset/`
-- Generate one prediction row for every request in `dataset/deletion_requests.csv`
-- Write the final predictions to `output.csv` in the repository root
-
-Run the starter Python entry point with:
+Requirements: Python 3.11+. Run every command from the repository root (the folder holding `code/`).
+`requirements.txt` and `.env.example` sit at the repository root; identical copies are in `code/` so an
+unzipped `code.zip` has them too (use `code/requirements.txt` and `code/.env.example` there).
 
 ```bash
-python3 code/main.py
+pip install -r requirements.txt
 ```
-
-The blank template at `dataset/output.csv` is provided as a reference. Your final generated file for submission must be the root-level `output.csv`.
-
-
-## Dataset
-
-All participant-facing files are in `dataset/`:
-
-| File | Contents |
-| --- | --- |
-| `deletion_requests.csv` | 518 requests |
-| `sample_deletion_requests.csv` | 32 sample requests |
-| `sample_output.csv` | Correct sample answers |
-| `user_identities.csv` | Current user identities |
-| `user_audit_log.csv` | Historical identity changes |
-| `system_activity.csv` | Activity across services and data processes |
-| `deletion_rules.csv` | Required treatment for each data category |
-| `evidence_files.csv` | Manifest of supplied evidence files |
-| `output.csv` | Blank output template |
-
-Evidence is stored under `dataset/evidence/` and may include PDFs, images, logs, JSON, plain text, or SQL snapshot exports. SQL captures may contain a primary database, regional replicas, a reporting replica, or a failover replica so replication drift can be investigated directly. The `.sql` files are readable as text and executable with SQLite.
-
-Only `deletion_requests.csv` requires answers. The other files provide evidence and context.
-
----
-
-## Output
-
-Create `output.csv` with these columns in this exact order:
-
-```text
-case_id,deletion_status,steps_json
-```
-
-Produce exactly one row per request. `deletion_status` is `COMPLETE`, `INCOMPLETE`, or `NOT_APPLICABLE`. `steps_json` is an ordered JSON array containing findings, remediation actions, and verification checks. Use an empty array (`[]`) for `NOT_APPLICABLE`. Evidence references may be a `file_id`, `activity_id`, or `audit_id`. Determine the resource state at `audit_at` from the available evidence; reported workflow statuses and operation results are claims. Use `dataset/sample_output.csv` as the format reference.
-
-The final file must contain 518 data rows sorted by `case_id` (plus the header row). The grader parses `steps_json` as JSON, so object-key order and whitespace do not matter; array order does. Order findings, remediation, and verification in that phase order. Within a phase, follow the operation order in the problem statement, then sort by `system_id` and `resource_id`.
-
----
-
-## Evaluation
-
-`output.csv` will be compared with hidden canonical answers. Scoring considers:
-
-- deletion assessment accuracy;
-- current and historical identity resolution;
-- discovery of remaining data and recreation risks;
-- correct policy application and evidence references; and
-- completeness and ordering of remediation and verification steps.
-
-Your `code.zip` must include:
-
-```text
-code/evaluation/evaluation_report.md
-code/evaluation/usage_report.md
-```
-
-- `evaluation_report.md` must cover case, row, field, and sequence accuracy, at least three additional evaluation cases created by you, failures found, and improvements made.
-- `usage_report.md` must cover the final full-dataset run, including model providers and names, model calls, input and output tokens, total and average tokens per request, and estimated total and per-request cost. Include per-model and overall totals when using multiple models.
-
-**Important:** Place `evaluation_report.md` and `usage_report.md` inside `code/evaluation/` (matching `code/evaluation/main.py` in this starter layout), write your complete evaluation metrics, custom evaluation test cases, and token/cost breakdowns directly inside those Markdown files, and keep prompts in source code or Markdown files. Automated code evaluation ignores raw data files (`.csv`, `.tsv`, `.json`, `.jsonl`, `.sql`, `.log`), so content stored only in those formats will not be visible to the code judge or AI interviewer.
-
----
-
-## Chat Transcript
-
-This repository includes [`AGENTS.md`](./AGENTS.md), which instructs compatible AI coding tools to append conversation summaries to `log.txt` in the repository root:
-
-| Platform | Path |
-| --- | --- |
-| macOS / Linux | `<repo root>/log.txt` |
-| Windows | `<repo root>\log.txt` |
-
-- Always launch your AI coding agent from the repository root (or explicitly ask it to read `./AGENTS.md` first) so every turn is logged to `log.txt` with the required `User Prompt`, `Agent Response Summary`, `Actions`, and `Context` sections.
-- Upload `log.txt` directly as your `chat_transcript` submission on HackerRank.
-- Do not include API keys, tokens, credentials, or secrets in prompts, code, configuration, or `log.txt`.
-
----
-
-## Packaging `code.zip` and Submission
-
-| Item | Description |
-| --- | --- |
-| `code.zip` | Runnable solution, prompts, configuration, `README.md`, and `evaluation/` reports |
-| `output.csv` | One answer row for each of the 518 requests in `dataset/deletion_requests.csv` |
-| `chat_transcript` | The root `log.txt` file generated by your coding agent |
-| AI interview | Live explanation of your architecture, approach, and evaluation |
-
-You may use any programming language, model, framework, or retrieval approach. Include clear setup and execution instructions in `README.md` inside `code.zip`.
-
-To package `code.zip` from the repository root without bundling the dataset:
-
-**macOS / Linux:**
 
 ```bash
-zip -r code.zip README.md code -x "*/__pycache__/*" "*/.venv/*" "*/venv/*" "*/node_modules/*" "*/.git/*" "*/.DS_Store"
+cp .env.example .env
 ```
 
-**Windows (PowerShell):**
+`.env` holds `LLM_BASE_URL`, `LLM_API_KEY` and the role → model settings. The key may be left **empty** for a
+normal run: every model result is read from `code/cache/`. Place the participant `dataset/` folder at the
+repository root (next to `code/`).
 
-```powershell
-Compress-Archive -Path README.md, code -DestinationPath code.zip -Force
+Full run (writes `output.csv` at the repository root, validates it, zero model calls):
+
+```bash
+python code/main.py
 ```
 
-When packaging `code.zip`:
+Evaluation wrapper (sample grader + custom cases + output audit; exit 0 when custom cases and audit pass):
 
-- Keep your evaluation reports in `code/evaluation/` so they are bundled automatically with `code` (or add `evaluation` to the archive command above if you placed them in a top-level `evaluation/` directory).
-- Do **not** include `dataset/`, virtual environments (`.venv`, `venv`, `node_modules`), or build caches (`__pycache__`). On Windows, keep `.venv` at the repository root (outside `code/`) and remove any `code/__pycache__` folders before running `Compress-Archive`.
-- Do **not** include nested archives (`.zip`, `.tar`, `.gz`, `.tgz`, `.7z`, `.rar`) inside `code.zip` — submissions containing nested archive files will be rejected.
+```bash
+python code/evaluation/main.py
+```
 
-Before submitting, confirm that:
+Live re-extraction (needs `LLM_API_KEY`; ignores the caches and calls the gateway again, then re-run
+`python code/main.py`). Estimate the cost first with `--dry-run-cost`:
 
-- `output.csv` has the exact header `case_id,deletion_status,steps_json` and contains all 518 data rows sorted by `case_id`;
-- every `steps_json` value is a valid JSON array with consecutive step numbers starting at `1`;
-- findings cite valid evidence IDs, and `COMPLETE` verification steps cite evidence proving the current state;
-- proposed remediation and future verification steps use an empty `evidence_id` (`""`);
-- `code.zip` includes your runnable code, `README.md`, `code/evaluation/evaluation_report.md`, and `code/evaluation/usage_report.md`;
-- `log.txt` follows the `AGENTS.md` turn format and is uploaded to the `chat_transcript` slot; and
-- no API keys, credentials, real personal data, or sensitive configuration values are included.
+```bash
+python code/main.py --extract-vision --refresh-cache
+```
+
+```bash
+python code/main.py --classify-intent --refresh-cache
+```
+
+```bash
+python code/main.py --triage --refresh-cache
+```
+
+### Every debug command
+
+| Command | What it prints |
+|---|---|
+| `python code/main.py --counts` | Row counts of every dataset table, email resolution split |
+| `python code/main.py --subject <email>` | The resolved subject: identifiers, history, linked resources |
+| `python code/main.py --identity-check` | Identity checks: all request emails resolve |
+| `python code/main.py --evidence <resource_id>` | Every parsed evidence row for one resource |
+| `python code/main.py --coverage` | Parser coverage and the sample citation check |
+| `python code/main.py --discovery` | Account discovery per case: chosen account, ties, unchosen count |
+| `python code/main.py --case <case_id>` | The full audit of one case (footprint, notes, steps) |
+| `python code/main.py --grade [--analytics-hypothesis attempted_delete\|always_anonymize]` | Sample grader |
+| `python code/main.py --grade-custom` | The 9 custom and adversarial cases in `code/evaluation/custom_cases/` |
+| `python code/main.py --audit` | Re-validates `output.csv`, determinism check, harm signals, status mix |
+| `python code/main.py --usage` | Usage ledger totals per model (source of `usage_report.md`) |
+| `python code/main.py --dry-run-cost` | Estimated cost of uncached model work |
+| `python code/tools/list_models.py` | Models offered by the configured gateway (needs the key) |
+
+## Results and the commands behind them
+
+Sample set (32 cases with public answers) — `python code/main.py --grade`:
+
+| Metric | Value |
+|---|---|
+| Deletion-status accuracy | 1.000 (32/32) |
+| Case exact (status + full ordered steps) | 26/32 |
+| Step recall / precision | 0.969 / 0.979 |
+| Field accuracy (phase / system_id / resource_id / operation / state / evidence_id) | 0.990 / 0.969 / 0.948 / 0.969 / 0.969 / 0.984 |
+| Sequence exact / pairwise order agreement | 0.812 / 1.000 |
+
+Custom and adversarial cases — `python code/main.py --grade-custom`: 9/9 pass (custom 5/5, adversarial 4/4).
+
+Full evaluation run — `python code/main.py --audit`: validator PASS, 518 rows, output matches a fresh rebuild,
+153 COMPLETE / 355 INCOMPLETE / 10 NOT_APPLICABLE, 0 citations of evidence captured after `audit_at`.
+
+Model usage behind `output.csv` — `python code/main.py --usage`: 182 calls, 245,695 input / 50,875 output tokens,
+estimated $0.9714 ($0.001875 per request over 518). Models: `claude-sonnet`
+(`bedrock/global.anthropic.claude-sonnet-5-5`), `bedrock/qwen.qwen3-vl-235b-a22b`, `claude-haiku`
+(`claude-haiku-5-5`). Costs are estimates from the price table in `ghost/llm.py`.
+
+Full reports: [`code/evaluation/evaluation_report.md`](code/evaluation/evaluation_report.md),
+[`code/evaluation/usage_report.md`](code/evaluation/usage_report.md).
+
+## Known limits
+
+- **Account ties.** In many evaluation cases several accounts were deleted in the same window with identical
+  results and no identifier ties any of them to the subject. The agent makes a deterministic one-to-one choice
+  and notes it as tentative; only the `account_service` step's `resource_id` can be wrong in those cases
+  (samples case_23, case_28, case_29; case_03 is the same tie for an anonymized analytics record).
+- **Missing audit records.** Some policy-retained security audit records appear in no participant file
+  (samples case_18, case_20), so their `VERIFY_RECORD_PRESENT` step cannot be produced.
+- One evaluation case has no account activity at all and is reported with the note "account unknown".
+- Cost figures are estimates, not gateway invoices.
+
+## Packaging
+
+`code.zip` contains `README.md` and `code/` only (no `dataset/`, `.env`, `log.txt`, `__pycache__`).
+After unzipping, copy `dataset/` next to `code/` and run `python code/main.py`.
