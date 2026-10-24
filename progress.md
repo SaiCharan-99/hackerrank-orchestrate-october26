@@ -95,6 +95,16 @@ Files: created `code/ghost/discovery.py`; changed `code/main.py` (`--discovery`)
 ## Open issues
 
 - P2b: 221/518 evaluation cases keep 2-6 account candidates (tentative choice); Phase 4 triage must resolve them.
+- P2b-verifier (2026-10-25): the residual ambiguity is informational, not a parsing gap. Tested on the 326 known
+  case->account pairs: deletion-worker order within a reported_at cluster has coin-flip agreement (0.45-0.54) with
+  requested_at, case number, user number, email order and account number, so processing order carries no signal.
+  Intersecting candidates with accounts enumerated in the cluster's own evidence files resolves only 18 more cases;
+  188 ambiguous cases have no candidate account named in any nearby file (their absence is proven by scoped
+  extracts that enumerate account_service without naming accounts). Consequences: (a) Phase 3 uses the tentative
+  one-to-one choice as-is; (b) Phase 4 triage must NOT ask an LLM to pick an account (no information to reason on),
+  it should only re-run discovery after vision rows add account<->email links from the console screenshots;
+  (c) Phase 6 must document this as a known limit: only the account_service verification step's resource_id is
+  affected in those cases, every other step is unaffected.
   Samples case_23 (account_410 vs 9155, identical FAILED timing), case_28/case_29 (5482/7012 swapped, same
   reported_at, both FAILED) cannot be separated by activity: they need non-account evidence (search decoy in case_28,
   images/PDFs) in Phase 4.
