@@ -1,0 +1,15 @@
+# secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# scratch
+*.tmp
+.pytest_cache/
+
+# packaged artifact (rebuilt at Phase 7)
+code.zip
