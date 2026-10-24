@@ -1,6 +1,8 @@
 """CLI entry point for the Ghost Data Still Exists deletion-audit agent.
 
-Usage:  python code/main.py --counts
+Usage:  python code/main.py                 (full run from caches, writes output.csv, zero LLM calls)
+        python code/main.py --audit         (re-read output.csv: validator, harm signals, status mix)
+        python code/main.py --counts
         python code/main.py --subject <email>
         python code/main.py --identity-check
         python code/main.py --evidence <resource_id>
@@ -469,6 +471,70 @@ def cmd_triage(refresh: bool) -> int:
     return 0
 
 
+def _validate_output(data, path):
+    from ghost.output import evidence_times, read_output, validate
+
+    header, rows = read_output(path)
+    return rows, validate(header, rows, data.requests, evidence_times(data))
+
+
+def _print_validation(v) -> None:
+    print(f"Validator: {'PASS' if v.ok else 'FAIL'} ({len(v.errors)} errors, {len(v.warnings)} warnings)")
+    for e in v.errors[:20]:
+        print(f"  ERROR {e}")
+    for w in v.warnings[:20]:
+        print(f"  WARN  {w}")
+
+
+def cmd_run() -> int:
+    """Phase 5: every case from caches (zero LLM calls) -> output.csv at the repo root -> validator."""
+    from collections import Counter
+
+    from ghost.config import OUTPUT_PATH
+    from ghost.output import rows_from_audits, write_output
+
+    data, _, audits = _audits()
+    rows = rows_from_audits(audits, data.requests["case_id"])
+    write_output(rows, OUTPUT_PATH)
+    _, v = _validate_output(data, OUTPUT_PATH)
+    n_steps = sum(r[2].count('"step_no"') for r in rows)
+    print(f"Wrote {OUTPUT_PATH.name}: {len(rows)} rows, {n_steps} steps")
+    print(f"Status: {dict(sorted(Counter(r[1] for r in rows).items()))}")
+    _print_validation(v)
+    return 0 if v.ok else 1
+
+
+def cmd_audit() -> int:
+    """Re-read output.csv, re-run every check, the APPROACH.md section 8 harm signals and the status mix."""
+    from ghost.config import OUTPUT_PATH
+    from ghost.evidence.vision import extract_all
+    from ghost.output import HARM_ACTIONS, harm_signals, rows_from_audits, status_distribution
+
+    if not OUTPUT_PATH.exists():
+        print(f"{OUTPUT_PATH.name} missing: run python code/main.py first")
+        return 1
+    data, _, audits = _audits()
+    rows, v = _validate_output(data, OUTPUT_PATH)
+    _print_validation(v)
+    fresh = rows_from_audits(audits, data.requests["case_id"])
+    drift = [a[0] for a, b in zip(rows, fresh) if a != b] + (["<row count>"] if len(rows) != len(fresh) else [])
+    print(f"Determinism: output.csv {'matches' if not drift else 'DIFFERS from'} a fresh cached rebuild"
+          + (f" ({len(drift)} cases, e.g. {drift[:5]})" if drift else ""))
+    vision = extract_all(data, None, load_config(), only_cached=True)
+    print("Harm signals (APPROACH.md section 8):")
+    signals = harm_signals(audits, data.requests["case_id"], vision, v)
+    for name, (val, num, den) in signals.items():
+        shown = f"{val}" if den is None else f"{val:.3f} ({num}/{den})"
+        print(f"  {name:<27} {shown:<18} action: {HARM_ACTIONS[name]}")
+    ev = status_distribution(r[1] for r in rows)
+    sm = status_distribution(data.sample_output["deletion_status"])
+    print("Status distribution        eval (n=%d)       samples (n=%d)" % (len(rows), len(data.sample_output)))
+    for s in ev:
+        print(f"  {s:<24} {ev[s][0]:>4} {ev[s][1]:6.1%}      {sm[s][0]:>4} {sm[s][1]:6.1%}")
+    hard_fail = not v.ok or drift or signals["future_evidence_citations"][0] != 0
+    return 1 if hard_fail else 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Ghost Data Still Exists deletion-audit agent")
     parser.add_argument("--counts", action="store_true", help="print dataset table counts")
@@ -486,7 +552,10 @@ def main() -> int:
     parser.add_argument("--triage", action="store_true", help="Phase 4 bounded evidence triage")
     parser.add_argument("--refresh-cache", action="store_true", help="ignore LLM caches and call again")
     parser.add_argument("--usage", action="store_true", help="print the usage ledger totals")
+    parser.add_argument("--audit", action="store_true", help="re-validate output.csv, harm signals, status mix")
     args = parser.parse_args()
+    if args.audit:
+        return cmd_audit()
     if args.dry_run_cost:
         return cmd_dry_run_cost()
     if args.extract_vision:
@@ -513,8 +582,7 @@ def main() -> int:
         return cmd_grade(args.analytics_hypothesis)
     if args.case:
         return cmd_case(args.case)
-    parser.print_help()
-    return 0
+    return cmd_run()
 
 
 if __name__ == "__main__":

@@ -25,7 +25,7 @@ Design reference: `APPROACH.md`. Output contract: `AGENTS.md` §6. Phase prompts
 | 3 | State engine + local grader | DONE | `--grade` reports 32/32 exact sample matches |
 | 3b | Discovery fix: orphan accounts, unchosen cases (prompts.md Phase 3b) | DONE | --discovery chosen=None count is 1; --grade >= 25/32 |
 | 4 | Vision extraction + intent classifier + triage | DONE | vision agreement pass clean; `NOT_APPLICABLE` set agrees with `CLASSIFY_REQUEST` activities |
-| 5 | Full run + validator | TODO | `output.csv` 518 rows, validator PASS, zero future-evidence citations |
+| 5 | Full run + validator | DONE | `output.csv` 518 rows, validator PASS, zero future-evidence citations |
 | 6 | Evaluation reports + custom/adversarial cases | TODO | `code/evaluation/evaluation_report.md` and `usage_report.md` filled from grader/ledger output |
 | 7 | README, interview checklist, code.zip | TODO | zip = `README.md` + `code/`, no dataset/.env/log; clean run from a fresh unzip |
 
@@ -114,6 +114,26 @@ Files: created `code/ghost/llm.py`, `code/ghost/intent.py`, `code/ghost/triage.p
 changed `code/main.py` (`--dry-run-cost --extract-vision --classify-intent --triage --refresh-cache --usage`; `_audits`,
 `--discovery`, `--coverage`, `--evidence` now use text + cached vision rows, intents and triage).
 
+## Phase 5 summary (DONE 2026-10-25)
+
+`code/ghost/output.py` writes `output.csv` (518 rows, natural case order, csv-quoted compact JSON) and validates it
+(header, rows, order, JSON, seven keys, step_no, phase order, phase/op/state pairs, evidence per status, status vs findings,
+remediation -> finding + verification, no citation after audit_at, NOT_APPLICABLE -> []). Default `python code/main.py`
+runs the cached pipeline (0 LLM calls; ledger unchanged at 182) and validates: PASS. `--audit` re-reads the file: PASS,
+determinism match, harm signals 0.000 / 0.012 / 0.467 / 0; status 153 C / 355 I / 10 NA vs samples 10 / 22 / 0.
+Files: created `code/ghost/output.py`, `output.csv`; changed `code/main.py` (default run, `--audit`).
+
+## Decisions and parameters (P5)
+
+- P5: citable ids = manifest file_id (captured_at), activity_id (event_time), audit_id (event_time); unknown id = error.
+- P5: COMPLETE with [] steps is a warning, not an error (none today: case_53 is now INCOMPLETE via support_1034).
+- P5: remediation/finding/verification consistency is checked per resource_id; verification-only resources are allowed.
+- P5: --audit exits 1 on any validator error, any drift between output.csv and a fresh cached rebuild, or any future
+  citation. unresolved_subject_rate denominator = applicable (non-NOT_APPLICABLE) eval cases; unprovable_resource_rate =
+  "unprovable" resource notes / (notes + audited resources); vision_disagreement_rate = files whose A/B first passes
+  disagreed (before third-pass reconciliation) / PNG+PDF files.
+- P5: validator self-test: gold sample_output.csv validates clean; flipping INCOMPLETE -> COMPLETE yields 140 errors.
+
 ## Decisions and parameters (P4)
 
 - P4: gateway calls never send temperature; images only via responses.create (input_text + input_image data URL); text via
@@ -176,6 +196,9 @@ changed `code/main.py` (`--dry-run-cost --extract-vision --classify-intent --tri
 - P0: role model defaults mirror `.env.example` (vision `claude-sonnet`, vision B `bedrock/qwen.qwen3-vl-235b-a22b`, text `claude-haiku`, triage `claude-sonnet`, budget $10).
 
 ## Open issues
+
+- P5: NOT_APPLICABLE share 1.9% eval vs 0% samples (samples contain no non-deletion requests; not a signal of error).
+- P5: vision_disagreement_rate 0.467 is pre-reconciliation; all 7 resolved by third pass, 0 extraction_failed.
 
 - P4: vision rows resolved 0 of 235 ambiguous accounts (screenshots show story users already owned by text evidence).
   Remaining sample failures are only the documented ties (case_03 analytics, case_23/28/29 accounts) and
@@ -271,6 +294,9 @@ changed `code/main.py` (`--dry-run-cost --extract-vision --classify-intent --tri
 
 ## Diagnosis log (signal → cause → change)
 
+- P5: bash printf of SESSION START failed (`missing unicode digit for \U`) -> Windows path `C:\Users` read as a printf escape -> appended via heredoc instead.
+- P5: step-count print used a nested-quote f-string (needs Python 3.12+) -> portability risk for graders on older Python -> precomputed `n_steps`.
+
 - P1: none (no fixes; all checks matched first run).
 - P2: 5 cited sample steps "no row" (account_001/002/004 in evidence_54, account_4857 in evidence_51) -> the cited
   files prove absence by omitting the account from a full table/collection -> added parser scopes + `absent_by_omission`.
@@ -332,6 +358,5 @@ changed `code/main.py` (`--dry-run-cost --extract-vision --classify-intent --tri
 
 ## Next step
 
-Phase 5 (Full run + validator): write output.csv for all 518 cases from the cached pipeline (`_audits`, zero LLM calls),
-add the validator (518 rows, sorted, JSON/phase/operation checks, zero future citations, flag empty COMPLETE such as
-case_53). Paste the prompts.md "Phase 5" block.
+Phase 6 (Evaluation reports + custom/adversarial cases): fill `code/evaluation/evaluation_report.md` from `--grade`
+and `usage_report.md` from `--usage`; at least three custom cases. Paste the prompts.md "Phase 6" block.
